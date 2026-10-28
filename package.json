@@ -1,0 +1,84 @@
+{
+  "name": "feedback-alley",
+  "productName": "Feedback Alley",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Block-and-layer feedback displays for Bitfocus Companion",
+  "author": "Feedback Alley",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit -p . && vite build",
+    "start": "node server/index.js",
+    "typecheck": "tsc --noEmit -p .",
+    "app": "npm run build && electron .",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/react": "19.1.2",
+    "@types/react-dom": "19.1.2",
+    "@vitejs/plugin-react": "4.4.1",
+    "electron": "44.7.0",
+    "electron-builder": "26.17.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "typescript": "5.8.3",
+    "vite": "6.3.5"
+  },
+  "build": {
+    "appId": "com.feedbackalley.app",
+    "productName": "Feedback Alley",
+    "files": [
+      "dist/**",
+      "server/**",
+      "electron/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.utilities",
+      "identity": null
+    },
+    "dmg": {
+      "artifactName": "Feedback-Alley-${version}-mac-${arch}.${ext}"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Feedback-Alley-${version}-windows-setup.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "AudioVideo",
+      "artifactName": "Feedback-Alley-${version}-linux-${arch}.${ext}"
+    }
+  }
+}
