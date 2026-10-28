@@ -68,11 +68,20 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 11px; background:
 /* ---------- editor layout ---------- */
 .editor {
   display: grid;
-  grid-template-columns: 240px 1fr 320px;
+  grid-template-columns: var(--side-w, 240px) 1fr 320px;
   grid-template-rows: 44px 1fr;
   grid-template-areas: "top top top" "side canvas inspector";
   height: 100%;
+  position: relative;
 }
+/* drag handle on the left pane's edge */
+.side-resizer {
+  position: absolute; top: 44px; bottom: 0; left: calc(var(--side-w, 240px) - 3px); width: 7px;
+  cursor: col-resize; z-index: 5; touch-action: none;
+}
+.side-resizer::after { content: ''; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: transparent; transition: background 0.15s; }
+.side-resizer:hover::after, .resizing-cols .side-resizer::after { background: var(--accent); width: 2px; left: 2px; }
+.resizing-cols, .resizing-cols * { cursor: col-resize !important; user-select: none; }
 .topbar {
   grid-area: top;
   display: flex; align-items: center; gap: 12px;
@@ -229,6 +238,14 @@ button.crumb:hover { color: var(--text); background: #ffffff14; }
 button.primary { background: var(--accent-2); border-color: var(--accent); color: white; justify-content: center; }
 button.primary:hover { background: var(--accent); }
 .template-item { cursor: grab; }
+.item-list li.template-item { align-items: flex-start; }
+.template-item .drag-grip { padding-top: 2px; }
+.template-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+/* full names, wrapped if needed, so templates with a shared prefix are easy to tell apart */
+.template-name { overflow-wrap: anywhere; line-height: 1.3; }
+.template-body input { width: 100%; }
+.template-actions { display: flex; align-items: center; gap: 4px; }
+.template-actions .spacer { flex: 1; }
 .template-item:active { cursor: grabbing; }
 .drag-grip { color: var(--muted); font-size: 12px; }
 .item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -390,7 +407,7 @@ select.fmt-size:hover { border-color: var(--line); }
 .test-result.ok { color: var(--ok); }
 
 @media (max-width: 1000px) {
-  .editor { grid-template-columns: 200px 1fr 280px; }
+  .editor { grid-template-columns: var(--side-w, 200px) 1fr 280px; }
 }
 .anchor-grid { display: inline-grid; grid-template-columns: repeat(3, 22px); gap: 3px; padding: 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--input-bg, #00000022); }
 .anchor-grid button { width: 22px; height: 22px; min-width: 0; padding: 0; border-radius: 4px; display: grid; place-items: center; }
