@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import type { Block, Layer, Screen } from '../types';
 import { useStore } from '../lib/store';
 import { useLiveValues } from '../lib/useLiveValues';
@@ -18,6 +18,7 @@ export function Editor({ screenId, onOpenScreen }: { screenId: string | null; on
   const [sel, setSel] = useState<Selection>(EMPTY_SELECTION);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const side = useSideWidth();
 
   useEffect(() => setSel(EMPTY_SELECTION), [screen.id]);
 
@@ -61,9 +62,15 @@ export function Editor({ screenId, onOpenScreen }: { screenId: string | null; on
   return (
     <EditorCtx.Provider value={ctx}>
       <ValuesCtx.Provider value={values}>
-        <div className="editor">
+        <div className="editor" style={{ '--side-w': `${side.width}px` } as CSSProperties}>
           <TopBar serverDown={serverDown} onSettings={() => setSettingsOpen(true)} />
           <Sidebar onOpenScreen={onOpenScreen} />
+          <div
+            className="side-resizer"
+            title="Drag to resize. Double-click to reset."
+            onPointerDown={side.startDrag}
+            onDoubleClick={side.reset}
+          />
           <Canvas />
           <Inspector />
           <Shortcuts />
@@ -260,4 +267,56 @@ function Shortcuts() {
   }, [project, sel, setSel, undo, redo, actions, zoom, setZoom]);
 
   return null;
+}
+
+// Width of the left pane, adjustable by dragging its edge. Remembered per
+// browser (a viewer preference, not part of the project).
+const SIDE_KEY = 'feedback-alley.sideWidth';
+const SIDE_DEFAULT = 240;
+const SIDE_MIN = 180;
+const SIDE_MAX = 560;
+
+function useSideWidth() {
+  const [width, setWidth] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem(SIDE_KEY));
+      return saved >= SIDE_MIN && saved <= SIDE_MAX ? saved : SIDE_DEFAULT;
+    } catch {
+      return SIDE_DEFAULT;
+    }
+  });
+  const save = (w: number) => {
+    try {
+      localStorage.setItem(SIDE_KEY, String(Math.round(w)));
+    } catch {
+      // storage unavailable: the width just isn't remembered
+    }
+  };
+  const startDrag = (e: RPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const handle = e.currentTarget;
+    const left = (handle.parentElement as HTMLElement).getBoundingClientRect().left;
+    handle.setPointerCapture(e.pointerId);
+    document.body.classList.add('resizing-cols');
+    let w = width;
+    const move = (ev: PointerEvent) => {
+      // leave the canvas at least 40% of the window
+      w = Math.max(SIDE_MIN, Math.min(SIDE_MAX, window.innerWidth * 0.4, ev.clientX - left));
+      setWidth(w);
+    };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      document.body.classList.remove('resizing-cols');
+      save(w);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+  };
+  const reset = () => {
+    setWidth(SIDE_DEFAULT);
+    save(SIDE_DEFAULT);
+  };
+  return { width, startDrag, reset };
 }

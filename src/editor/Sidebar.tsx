@@ -124,7 +124,7 @@ function TemplatesPanel() {
           <li
             key={t.id}
             className="template-item"
-            title={`${t.blocks.length} block(s) — drag onto the screen, or Insert at its saved position`}
+            title={`${t.name}: ${t.blocks.length} block${t.blocks.length === 1 ? '' : 's'}. Drag onto the screen, or Insert at its saved position`}
             draggable={renaming !== t.id}
             onDragStart={(e) => {
               templateDrag.id = t.id;
@@ -134,9 +134,11 @@ function TemplatesPanel() {
             onDragEnd={() => (templateDrag.id = null)}
           >
             <span className="drag-grip" aria-hidden>⠿</span>
+            <div className="template-body">
             {renaming === t.id ? (
               <input
                 autoFocus
+                onFocus={(e) => e.target.select()}
                 defaultValue={t.name}
                 onBlur={(e) => {
                   const v = e.target.value.trim();
@@ -149,13 +151,17 @@ function TemplatesPanel() {
                 }}
               />
             ) : (
-              <span className="item-name" onDoubleClick={() => setRenaming(t.id)}>{t.name}</span>
+              <span className="template-name" title="Double-click to rename" onDoubleClick={() => setRenaming(t.id)}>{t.name}</span>
             )}
-            <span className="muted small">{t.blocks.length}</span>
-            <button className="small" title="Insert at the position it was saved" onClick={() => insertTemplate(t)}>Insert</button>
-            <button className="icon danger" title="Delete template" onClick={() => {
-              if (confirm(`Delete template "${t.name}"?`)) mutate((p) => (p.templates = p.templates.filter((x) => x.id !== t.id)));
-            }}>✕</button>
+            <div className="template-actions">
+              <span className="muted small">{t.blocks.length} block{t.blocks.length === 1 ? '' : 's'}</span>
+              <span className="spacer" />
+              <button className="small" title="Insert at the position it was saved" onClick={() => insertTemplate(t)}>Insert</button>
+              <button className="icon danger" title="Delete template" onClick={() => {
+                if (confirm(`Delete template "${t.name}"?`)) mutate((p) => (p.templates = p.templates.filter((x) => x.id !== t.id)));
+              }}>✕</button>
+            </div>
+            </div>
           </li>
         ))}
       </ul>
