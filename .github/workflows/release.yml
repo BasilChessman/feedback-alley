@@ -1,0 +1,48 @@
+# Builds the desktop app for macOS, Windows and Linux when a version tag is
+# pushed (e.g. `git tag v0.1.0 && git push --tags`), and attaches the
+# installers to a draft GitHub release for that tag.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: mac
+            files: release/*.dmg
+          - os: windows-latest
+            target: win
+            files: release/*.exe
+          - os: ubuntu-latest
+            target: linux
+            files: release/*.AppImage
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist:${{ matrix.target }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feedback-alley-${{ matrix.target }}
+          path: ${{ matrix.files }}
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: ${{ matrix.files }}
