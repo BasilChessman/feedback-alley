@@ -17,6 +17,7 @@ Download the installer for your computer from the project's **Releases** page:
 The app isn't code-signed yet, so the first launch shows a warning:
 
 - **macOS:** open the app once and dismiss the warning, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
+  If that button doesn't appear, run this once in Terminal instead: `xattr -dr com.apple.quarantine "/Applications/Feedback Alley.app"`
 - **Windows:** on the SmartScreen prompt click **More info → Run anyway**.
 
 Opening the app starts the editor in a window, and the server that displays connect to.
