@@ -98,6 +98,10 @@ function buildMenu() {
       ],
     },
     { role: 'windowMenu' },
+    {
+      role: 'help',
+      submenu: [{ label: 'Feedback Alley User Guide', click: () => shell.openExternal(`http://localhost:${port}/guide/index.html`) }],
+    },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
