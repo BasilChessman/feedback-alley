@@ -122,3 +122,7 @@ src/render/          ScreenView: the renderer shared by the editor and displays
 src/editor/          canvas, inspector, rules editor, panels, settings
 src/Display.tsx      full-screen output
 ```
+
+## License
+
+[MIT](LICENSE)

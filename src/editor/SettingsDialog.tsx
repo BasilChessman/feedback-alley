@@ -3,12 +3,14 @@ import type { Project } from '../types';
 import { api } from '../lib/api';
 import { uid } from '../lib/defaults';
 import { migrate, useStore } from '../lib/store';
+import { saveTextFile } from '../lib/saveFile';
 import { NumberField, Row, Section, TextField } from './fields';
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const { project, mutate, replace } = useStore();
   const [tests, setTests] = useState<Record<number, string>>({});
   const fileInput = useRef<HTMLInputElement>(null);
+  const [exported, setExported] = useState('');
 
   const test = async (i: number) => {
     setTests((t) => ({ ...t, [i]: 'Testing…' }));
@@ -63,15 +65,16 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         <Section title="Backup">
           <p className="muted small">Export everything (screens, templates, connections) to a file, or replace this project with one.</p>
           <span className="btn-row">
-            <button onClick={() => {
-              const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
-              const a = document.createElement('a');
-              a.href = URL.createObjectURL(blob);
-              a.download = `feedback-alley-${new Date().toISOString().slice(0, 10)}.json`;
-              a.click();
-              URL.revokeObjectURL(a.href);
+            <button onClick={async () => {
+              const name = await saveTextFile(
+                `feedback-alley-${new Date().toISOString().slice(0, 10)}.json`,
+                JSON.stringify(project, null, 2),
+                'Feedback Alley project',
+              );
+              if (name) setExported(`Exported to ${name}`);
             }}>Export…</button>
             <button onClick={() => fileInput.current?.click()}>Import…</button>
+            {exported && <span className="muted small">{exported}</span>}
           </span>
           <input
             ref={fileInput}
@@ -91,7 +94,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               }
             }}
           />
-          <p className="muted small">Note: uploaded images live in the server’s <code>data/assets</code> folder and are not inside the export.</p>
+          <p className="muted small">Note: uploaded images live in the data folder’s <code>assets</code> folder and are not inside the export.</p>
         </Section>
       </div>
     </div>

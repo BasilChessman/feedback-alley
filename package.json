@@ -4,7 +4,8 @@
   "private": true,
   "version": "0.1.0",
   "description": "Block-and-layer feedback displays for Bitfocus Companion",
-  "author": "Feedback Alley",
+  "license": "MIT",
+  "author": "Michael Craven",
   "type": "module",
   "main": "electron/main.js",
   "scripts": {
