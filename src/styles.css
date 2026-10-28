@@ -84,6 +84,11 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 11px; background:
 }
 .brand { font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; }
 .topbar > * { flex-shrink: 0; }
+.topbar .top-icon {
+  width: 34px; height: 30px; padding: 0; display: inline-grid; place-items: center;
+  font-size: 17px; font-weight: 700; line-height: 1; text-decoration: none; color: var(--text);
+}
+.topbar .settings-btn { font-size: 22px; font-weight: 400; }
 .topbar .btn-row { flex-wrap: nowrap; }
 .topbar button { white-space: nowrap; }
 /* narrower windows: keep everything on one line */
@@ -387,5 +392,10 @@ select.fmt-size:hover { border-color: var(--line); }
 @media (max-width: 1000px) {
   .editor { grid-template-columns: 200px 1fr 280px; }
 }
+.anchor-grid { display: inline-grid; grid-template-columns: repeat(3, 22px); gap: 3px; padding: 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--input-bg, #00000022); }
+.anchor-grid button { width: 22px; height: 22px; min-width: 0; padding: 0; border-radius: 4px; display: grid; place-items: center; }
+.anchor-grid button::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.anchor-grid button.on { background: var(--accent-2); border-color: transparent; }
+.anchor-grid button.on::after { background: white; width: 8px; height: 8px; }
 .btn-row button.on { background: var(--accent-2); color: white; border-color: transparent; }
 .topbar .segmented.units button { min-width: 30px; }

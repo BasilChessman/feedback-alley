@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Block, Layer, Project } from '../types';
 import { api } from './api';
 import { newProject } from './defaults';
+import { syncFixedLayers } from './fixed';
 
 const HISTORY_LIMIT = 150;
 const SAVE_DELAY_MS = 400;
@@ -85,6 +86,7 @@ export function StoreProvider({ initial, children }: { initial: Project; childre
       const prev = projectRef.current;
       const next = structuredClone(prev);
       fn(next);
+      syncFixedLayers(next);
       if (!transient) pushHistory(prev);
       commit(next);
     },
