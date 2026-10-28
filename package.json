@@ -2,7 +2,7 @@
   "name": "feedback-alley",
   "productName": "Feedback Alley",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Block-and-layer feedback displays for Bitfocus Companion",
   "license": "MIT",
   "author": "Michael Craven",
@@ -23,12 +23,12 @@
     "@types/react": "19.1.2",
     "@types/react-dom": "19.1.2",
     "@vitejs/plugin-react": "4.4.1",
-    "electron": "44.7.0",
+    "electron": "44.10.0",
     "electron-builder": "26.17.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "typescript": "5.8.3",
-    "vite": "6.3.5"
+    "vite": "6.4.5"
   },
   "build": {
     "appId": "com.feedbackalley.app",
