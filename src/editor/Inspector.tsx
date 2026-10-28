@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import type { BarLayer, Block, GroupLayer, ImageLayer, Layer, Rect, Screen, ShapeLayer, TextLayer } from '../types';
+import type { Anchor, BarLayer, Block, GroupLayer, ImageLayer, Layer, Rect, Screen, ShapeLayer, TextLayer } from '../types';
 import { ASPECT_PRESETS, RESOLUTIONS } from '../lib/defaults';
 import { containerAt, containerRect, countLayers, groupAt } from '../lib/tree';
 import { rectPx, scaleStrokes, screenPx } from '../lib/pixels';
@@ -10,6 +10,7 @@ import { useActions, type AlignMode } from './actions';
 import { RulesEditor, type RuleProp } from './RulesEditor';
 import { RichTextField } from './RichTextField';
 import { BarProps } from './BarProps';
+import { nearestAnchor } from '../lib/fixed';
 import { ColorField, ImageField, NumberField, Row, Section, Segmented, Select, Slider, TextField, Toggle } from './fields';
 
 export const FONT_SUGGESTIONS = [
@@ -284,6 +285,61 @@ function GeometryFields({ rect, onChange, unit, frame }: { rect: Rect; onChange:
           </label>
         ))}
       </div>
+    </>
+  );
+}
+
+const ANCHOR_NAMES: Record<Anchor, [string, string]> = { 0: ['left', 'top'], 0.5: ['center', 'middle'], 1: ['right', 'bottom'] };
+const ANCHORS: Anchor[] = [0, 0.5, 1];
+
+// Relative layers resize with their block or group; fixed ones keep their size,
+// held in place by an anchor (see lib/fixed.ts).
+function SizingFields({ layer, parentKind, set }: { layer: Layer; parentKind: string; set: Setter }) {
+  const fixed = layer.sizing === 'fixed';
+  const ax = layer.anchorX ?? 0.5;
+  const ay = layer.anchorY ?? 0.5;
+  const anchorLabel = (x: Anchor, y: Anchor) =>
+    x === 0.5 && y === 0.5 ? 'center' : x === 0.5 ? ANCHOR_NAMES[y][1] : y === 0.5 ? ANCHOR_NAMES[x][0] : `${ANCHOR_NAMES[y][1]} ${ANCHOR_NAMES[x][0]}`;
+  return (
+    <>
+      <Row
+        label="Sizing"
+        hint={fixed ? `Keeps its size when the ${parentKind} is resized` : `Resizes along with the ${parentKind}`}
+      >
+        <Segmented
+          value={fixed ? 'fixed' : 'relative'}
+          onChange={(v) =>
+            set((l) => {
+              if (v === 'fixed') {
+                const a = nearestAnchor(l);
+                Object.assign(l, { sizing: 'fixed', anchorX: l.anchorX ?? a.ax, anchorY: l.anchorY ?? a.ay });
+              } else {
+                l.sizing = 'relative';
+              }
+            })
+          }
+          options={[
+            { value: 'relative', label: `Relative to ${parentKind}`, title: `Resizes along with the ${parentKind}` },
+            { value: 'fixed', label: 'Fixed', title: `Keeps its size when the ${parentKind} is resized` },
+          ]}
+        />
+      </Row>
+      {fixed && (
+        <Row label="Anchor" hint={`Stays pinned to the ${parentKind}’s ${anchorLabel(ax, ay)} as it resizes`}>
+          <span className="anchor-grid">
+            {ANCHORS.map((y) =>
+              ANCHORS.map((x) => (
+                <button
+                  key={`${x}-${y}`}
+                  className={x === ax && y === ay ? 'on' : ''}
+                  title={`Pin to the ${anchorLabel(x, y)}`}
+                  onClick={() => set((l) => Object.assign(l, { anchorX: x, anchorY: y }))}
+                />
+              )),
+            )}
+          </span>
+        </Row>
+      )}
     </>
   );
 }
@@ -581,9 +637,10 @@ function LayerInspector({ block, path, layer, inside = false }: { block: Block; 
       <button className="back-to-block" onClick={() => (inside ? actions.exitLevel() : setSel(selectLayers(block.id, path, [])))}>
         ← {inside ? `Step out of “${layer.name}”` : `Back to ${parentKind} “${parentName}”`}
       </button>
-      <Section title="Position & visibility">
+      <Section title="Position & size">
         <Row label="Name"><TextField value={layer.name} onChange={(v) => set((l) => (l.name = v))} /></Row>
         <GeometryFields rect={layer} unit={parentKind} frame={rectPx(screen, containerRect(block, path))} onChange={(r) => set((l) => Object.assign(l, r))} />
+        <SizingFields layer={layer} parentKind={parentKind} set={set} />
         <span className="btn-row">
           <button onClick={() => set((l) => Object.assign(l, { x: 0, y: 0, w: 100, h: 100 }))}>Fill {parentKind}</button>
         </span>

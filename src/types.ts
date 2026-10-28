@@ -62,6 +62,22 @@ interface LayerBase extends Rect {
   bgImage: string; // '' = none; url, /uploads/..., may contain variables
   bgFit: 'contain' | 'cover' | 'fill';
   radius: number; // reference px
+  // 'relative' (default): resizes with its block or group. 'fixed': keeps its
+  // size when the parent is resized, held in place by its anchor.
+  sizing?: 'relative' | 'fixed';
+  anchorX?: Anchor; // 0 left, 0.5 center, 1 right
+  anchorY?: Anchor; // 0 top, 0.5 middle, 1 bottom
+  fixed?: FixedState; // bookkeeping for fixed layers (see lib/fixed.ts)
+}
+
+export type Anchor = 0 | 0.5 | 1;
+
+export interface FixedState {
+  w: number; // layer size in screen %
+  h: number;
+  cw: number; // parent size in screen % when last synced
+  ch: number;
+  c: string; // parent id (block or group)
 }
 
 export interface TextLayer extends LayerBase {

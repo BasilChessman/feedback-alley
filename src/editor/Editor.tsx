@@ -143,8 +143,8 @@ function TopBar({ serverDown, onSettings }: { serverDown: boolean; onSettings: (
       <span className={`status ${connState.cls}`} title={connState.text}><span className="dot" /><span className="status-text">{connState.text}</span></span>
       <span className={`save-state ${saveState}`}>{saveState === 'saved' ? 'Saved' : saveState === 'saving' ? 'Saving…' : 'Save failed'}</span>
       <a className="button" href={`#/display/${screen.id}`} target="_blank" rel="noreferrer">Open display ↗</a>
-      <a className="button icon" href="guide/index.html" target="_blank" rel="noreferrer" title="User guide">?</a>
-      <button className="icon" title="Settings & connections" onClick={onSettings}>⚙</button>
+      <a className="button top-icon" href="guide/index.html" target="_blank" rel="noreferrer" title="User guide">?</a>
+      <button className="top-icon settings-btn" title="Settings & connections" onClick={onSettings}>⚙</button>
     </header>
   );
 }

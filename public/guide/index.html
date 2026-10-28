@@ -332,10 +332,20 @@
 </table>
 <p>Every layer also has:</p>
 <ul>
-  <li><b>Position &amp; visibility</b>: position and size within the block, alignment, opacity and Hidden. <b>Fill block</b> makes the layer cover the whole block.</li>
+  <li><b>Position &amp; size</b>: position and size within the block, sizing (below), alignment, opacity and Hidden. <b>Fill block</b> makes the layer cover the whole block.</li>
   <li><b>Background &amp; corners</b>: a background color and/or image for just this layer, and rounded corners.</li>
   <li><b>Feedback rules</b>: change this layer when Companion values change.</li>
 </ul>
+<h3>Relative or fixed size</h3>
+<p>Each layer’s <b>Sizing</b> setting, under <b>Position &amp; size</b>, decides what happens when you resize its block (or group):</p>
+<ul>
+  <li><b>Relative to block</b> (the default): the layer resizes along with the block, keeping its proportions within it.</li>
+  <li><b>Fixed</b>: the layer keeps its size and shape, for example a logo or status light that shouldn’t stretch.</li>
+</ul>
+<p>
+  A fixed layer also has an <b>Anchor</b>: the point of the block it stays pinned to. Pinned to a side or corner, it keeps the same distance
+  from that edge; pinned to the center, it stays centered. When you switch a layer to Fixed, the anchor nearest to it is chosen for you.
+</p>
 <p>Layers higher in the Layers list are drawn on top. Use the <b>Arrange</b> buttons to move a layer forward or backward.</p>
 
 <!-- ===================================================================== -->
