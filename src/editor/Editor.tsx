@@ -140,9 +140,10 @@ function TopBar({ serverDown, onSettings }: { serverDown: boolean; onSettings: (
           <button key={u} className={project.settings.units === u ? 'on' : ''} onClick={() => mutate((p) => (p.settings.units = u))}>{u}</button>
         ))}
       </span>
-      <span className={`status ${connState.cls}`} title={connState.text}><span className="dot" />{connState.text}</span>
+      <span className={`status ${connState.cls}`} title={connState.text}><span className="dot" /><span className="status-text">{connState.text}</span></span>
       <span className={`save-state ${saveState}`}>{saveState === 'saved' ? 'Saved' : saveState === 'saving' ? 'Saving…' : 'Save failed'}</span>
       <a className="button" href={`#/display/${screen.id}`} target="_blank" rel="noreferrer">Open display ↗</a>
+      <a className="button icon" href="guide/index.html" target="_blank" rel="noreferrer" title="User guide">?</a>
       <button className="icon" title="Settings & connections" onClick={onSettings}>⚙</button>
     </header>
   );

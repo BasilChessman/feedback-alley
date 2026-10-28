@@ -3,6 +3,10 @@
 Block-and-layer feedback displays for [Bitfocus Companion](https://bitfocus.io/companion).
 Inspired by [Companion Dashboard](https://github.com/tomhillmeyer/companion-dashboard), with a different layout model.
 
+## User guide
+
+The full [user guide](public/guide/index.html) is built into the app (the **?** button in the editor's top bar, or **Help → Feedback Alley User Guide**) and attached to each release as a PDF.
+
 ## Install
 
 Download the installer for your computer from the project's **Releases** page:

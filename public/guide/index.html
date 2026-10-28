@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feedback Alley User Guide</title>
+<style>
+  :root {
+    --text: #1d2330; --muted: #5d6678; --line: #dde2ea; --bg: #ffffff; --soft: #f4f6fa;
+    --accent: #2563eb; --screen: #14a085; --block: #2f6fe0; --layer: #8a55e6; --warn: #b45309;
+    --code-bg: #eef1f6;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 16px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+  nav.toc {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    padding: 28px 20px; border-right: 1px solid var(--line); font-size: 14px;
+  }
+  nav.toc .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; margin-bottom: 18px; }
+  nav.toc .brand img { width: 32px; height: 32px; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  nav.toc li { counter-increment: s; margin: 2px 0; }
+  nav.toc a { color: var(--muted); text-decoration: none; display: block; padding: 3px 8px; border-radius: 6px; }
+  nav.toc a::before { content: counter(s) ". "; color: #9aa3b3; }
+  nav.toc a:hover { background: var(--soft); color: var(--text); }
+  main { padding: 36px 48px 80px; min-width: 0; }
+  header.title { display: flex; align-items: center; gap: 18px; margin-bottom: 8px; }
+  header.title img { width: 72px; height: 72px; }
+  h1 { font-size: 34px; line-height: 1.2; margin: 0; }
+  .subtitle { color: var(--muted); margin: 4px 0 0; }
+  h2 { font-size: 25px; margin: 56px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 19px; margin: 30px 0 8px; }
+  h4 { font-size: 16px; margin: 22px 0 6px; }
+  p, ul, ol { margin: 0 0 14px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); }
+  code, kbd {
+    font: 0.88em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--code-bg); border-radius: 4px; padding: 1px 5px; white-space: nowrap;
+  }
+  kbd { border: 1px solid #cdd3dd; border-bottom-width: 2px; background: #fff; }
+  pre { background: var(--code-bg); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+  pre code { background: none; padding: 0; white-space: pre; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 18px; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { background: var(--soft); font-weight: 600; }
+  td:first-child { white-space: nowrap; }
+  figure { margin: 18px 0 24px; }
+  figure img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 6px 24px rgba(20, 30, 50, 0.12); display: block; }
+  figure.panel img { max-width: 320px; }
+  figure.pair { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  figure.pair > div { flex: 0 1 320px; }
+  figcaption { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  .note, .tip, .warn { border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; border-left: 4px solid; }
+  .note { background: #eef4ff; border-color: var(--accent); }
+  .tip { background: #ecfaf5; border-color: var(--screen); }
+  .warn { background: #fff6e8; border-color: var(--warn); }
+  .note > :last-child, .tip > :last-child, .warn > :last-child { margin-bottom: 0; }
+  .chip { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; border-radius: 4px; padding: 1px 7px; vertical-align: 2px; }
+  .chip.screen { background: var(--screen); } .chip.block { background: var(--block); } .chip.layer { background: var(--layer); }
+  .callouts { position: relative; }
+  .callouts .c {
+    position: absolute; width: 30px; height: 30px; border-radius: 50%; background: #f43f5e; color: #fff;
+    font-weight: 700; display: grid; place-items: center; font-size: 15px; box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.4);
+    transform: translate(-50%, -50%);
+  }
+  .legend { counter-reset: n; list-style: none; padding: 0; }
+  .legend li { counter-increment: n; padding-left: 38px; position: relative; }
+  .legend li::before {
+    content: counter(n); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%;
+    background: #f43f5e; color: #fff; font-weight: 700; font-size: 14px; display: grid; place-items: center;
+  }
+  .steps { padding-left: 22px; }
+  footer { margin-top: 60px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+  @media (max-width: 900px) {
+    .layout { display: block; }
+    nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+    main { padding: 24px 16px 60px; }
+  }
+  @media print {
+    @page { margin: 16mm 14mm; }
+    body { font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .layout { display: block; max-width: none; }
+    nav.toc { position: static; height: auto; border: none; padding: 0; page-break-after: always; }
+    nav.toc .brand { display: none; }
+    nav.toc::before { content: "Contents"; display: block; font-size: 20pt; font-weight: 700; margin-bottom: 10px; }
+    nav.toc a { color: var(--text); padding: 2px 0; }
+    main { padding: 0; }
+    h2 { break-before: page; border-top: none; margin-top: 0; }
+    h2#intro { break-before: auto; }
+    h2, h3, h4 { break-after: avoid; }
+    figure.panel img, figure.pair img { max-height: 4.6in; width: auto; }
+    figure.pair > div { flex: 0 1 auto; }
+    figure, table, .note, .tip, .warn, pre { break-inside: avoid; }
+    figure img { box-shadow: none; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc">
+  <div class="brand"><img src="img/icon.png" alt=""> Feedback Alley</div>
+  <ol>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#install">Install and first launch</a></li>
+    <li><a href="#connect">Connect to Companion</a></li>
+    <li><a href="#tour">A tour of the editor</a></li>
+    <li><a href="#concepts">How layouts work</a></li>
+    <li><a href="#screens">Screens</a></li>
+    <li><a href="#blocks">Blocks</a></li>
+    <li><a href="#layers">Layers</a></li>
+    <li><a href="#text">Text and formatting</a></li>
+    <li><a href="#bars">Bars, meters and countdowns</a></li>
+    <li><a href="#groups">Groups</a></li>
+    <li><a href="#variables">Variables</a></li>
+    <li><a href="#rules">Feedback rules</a></li>
+    <li><a href="#templates">Templates</a></li>
+    <li><a href="#positioning">Precise positioning</a></li>
+    <li><a href="#displays">Showing your screens</a></li>
+    <li><a href="#backup">Backup and moving projects</a></li>
+    <li><a href="#shortcuts">Keyboard shortcuts</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="title">
+  <img src="img/icon.png" alt="">
+  <div>
+    <h1>Feedback Alley User Guide</h1>
+    <p class="subtitle">Live feedback displays for Bitfocus Companion</p>
+  </div>
+</header>
+
+<!-- ===================================================================== -->
+<h2 id="intro">Introduction</h2>
+<p>
+  Feedback Alley turns information from <a href="https://bitfocus.io/companion">Bitfocus Companion</a> into
+  clean, full-screen displays for your crew and presenters: clocks, the camera on program, video countdowns,
+  audio levels, who’s on stage, an ON AIR sign, and anything else Companion knows about.
+</p>
+<p>
+  You design each display in the editor, and it updates live as Companion’s variables change.
+  Displays open in any web browser, on the computer running Feedback Alley or on any other computer, tablet or
+  TV on the same network.
+</p>
+<figure>
+  <img src="img/display.png" alt="A finished display showing time of day, program camera, the current segment, a video countdown, an audio meter and an ON AIR sign">
+  <figcaption>A finished display. Every value on it comes from Companion and updates live.</figcaption>
+</figure>
+
+<!-- ===================================================================== -->
+<h2 id="install">Install and first launch</h2>
+<p>Download the installer for your computer from the project’s Releases page:</p>
+<table>
+  <tr><th>Computer</th><th>Download</th></tr>
+  <tr><td>Mac with Apple Silicon (M1 or later)</td><td><code>Feedback-Alley-&lt;version&gt;-mac-arm64.dmg</code></td></tr>
+  <tr><td>Mac with an Intel processor</td><td><code>Feedback-Alley-&lt;version&gt;-mac-x64.dmg</code></td></tr>
+  <tr><td>Windows</td><td><code>Feedback-Alley-&lt;version&gt;-windows-setup.exe</code></td></tr>
+  <tr><td>Linux</td><td><code>Feedback-Alley-&lt;version&gt;-linux-x86_64.AppImage</code></td></tr>
+</table>
+<p class="tip">Not sure which Mac you have? Choose <b>Apple menu → About This Mac</b>. If it lists a “Chip” such as Apple M1, M2 or M3, use the Apple Silicon download.</p>
+
+<h3>macOS</h3>
+<ol class="steps">
+  <li>Open the <code>.dmg</code> file and drag <b>Feedback Alley</b> into <b>Applications</b>.</li>
+  <li>Open Feedback Alley from Applications. Because the app isn’t from the App Store or an identified developer, macOS warns you and won’t open it the first time. Click <b>Done</b>.</li>
+  <li>Open <b>System Settings → Privacy &amp; Security</b>, scroll down to the Security section and click <b>Open Anyway</b> next to Feedback Alley, then confirm.</li>
+</ol>
+<p>You only need to do this once.</p>
+<div class="warn">
+  <p>If <b>Open Anyway</b> doesn’t appear, or macOS says the app “is damaged”, open <b>Terminal</b> and run this once:</p>
+  <pre><code>xattr -dr com.apple.quarantine "/Applications/Feedback Alley.app"</code></pre>
+</div>
+
+<h3>Windows</h3>
+<ol class="steps">
+  <li>Run the setup file. If Windows SmartScreen says it protected your PC, click <b>More info → Run anyway</b>.</li>
+  <li>Follow the installer. You can choose where to install it.</li>
+  <li>The first time it runs, Windows may ask whether to allow Feedback Alley on your networks. Allow <b>private</b> networks so other computers can show your displays.</li>
+</ol>
+
+<h3>Linux</h3>
+<p>Make the AppImage executable (right-click → Properties → Allow executing, or <code>chmod +x</code>), then double-click it.</p>
+
+<h3>What happens when it runs</h3>
+<p>
+  Opening Feedback Alley starts the editor in a window, and also starts a small web server that your displays connect to.
+  Displays keep working as long as Feedback Alley is running.
+</p>
+<ul>
+  <li><b>macOS:</b> closing the window keeps Feedback Alley running in the background for your displays. Quit with <kbd>⌘Q</kbd>.</li>
+  <li><b>Windows and Linux:</b> closing the window quits Feedback Alley, which stops all displays. It asks first.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<h2 id="connect">Connect to Companion</h2>
+<p>Feedback Alley reads variables from Companion and can press Companion buttons, using Companion’s HTTP API.</p>
+<ol class="steps">
+  <li>Click <b>⚙</b> at the top right of the editor to open <b>Settings</b>.</li>
+  <li>Under <b>Companion connections</b>, enter Companion’s address in connection <code>[0]</code>, for example <code>http://192.168.1.20:8000</code>. Companion’s HTTP API usually uses port 8000. If Companion runs on this computer, use <code>http://127.0.0.1:8000</code>.</li>
+  <li>Click <b>Test</b>. You should see “Connected” with Companion’s current time.</li>
+</ol>
+<figure>
+  <img src="img/settings.png" alt="The Settings dialog with a Companion connection, display settings and backup buttons">
+  <figcaption>Settings: Companion connections, display options and project backup.</figcaption>
+</figure>
+<p>The top bar of the editor shows the connection status: a green dot means Companion is connected.</p>
+
+<h3>More than one Companion</h3>
+<p>
+  Click <b>+ Add connection</b> to add another Companion. Connection <code>[0]</code> is the default; variables from the
+  others are written with the connection number in front, such as <code>[1]$(atem:pgm)</code>. See <a href="#variables">Variables</a>.
+</p>
+
+<h3>Display settings</h3>
+<table>
+  <tr><th>Setting</th><th>What it does</th></tr>
+  <tr><td>Refresh rate</td><td>How often Feedback Alley asks Companion for new values, in milliseconds. 250 ms (four times a second) suits most shows.</td></tr>
+  <tr><td>Color fade</td><td>How long color changes take to fade, in milliseconds. 0 makes changes instant.</td></tr>
+  <tr><td>Default font</td><td>The font used by text layers that don’t set their own. Any font installed on the display computer works.</td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h2 id="tour">A tour of the editor</h2>
+<figure>
+  <div class="callouts">
+    <img src="img/editor-overview.png" alt="The Feedback Alley editor">
+    <span class="c" style="left: 8.6%; top: 7.5%">1</span>
+    <span class="c" style="left: 8.2%; top: 17.9%">2</span>
+    <span class="c" style="left: 50%; top: 16%">3</span>
+    <span class="c" style="left: 96.5%; top: 6.6%">4</span>
+    <span class="c" style="left: 31%; top: 2.4%">5</span>
+  </div>
+</figure>
+<ol class="legend">
+  <li><b>Screens</b>: every display layout in your project. Click one to edit it.</li>
+  <li><b>Blocks</b> and <b>Templates</b>: the blocks on this screen, and saved blocks you can reuse.</li>
+  <li><b>Canvas</b>: the screen you’re designing, shown live with real values from Companion. Drag to move and resize things here.</li>
+  <li><b>Inspector</b>: settings for whatever is selected. The colored label at the top always tells you what you’re editing:
+    <span class="chip screen">Screen</span> <span class="chip block">Block</span> <span class="chip layer">Layer</span>.</li>
+  <li><b>Top bar</b>: add blocks and layers, undo and redo, zoom, snapping, grid, % or px units, connection status, this guide (?), and Settings (⚙).</li>
+</ol>
+
+<!-- ===================================================================== -->
+<h2 id="concepts">How layouts work</h2>
+<table>
+  <tr><th>Item</th><th>What it is</th></tr>
+  <tr><td><span class="chip screen">Screen</span></td><td>One display layout with a fixed shape (aspect ratio), such as 16:9. A project can have many screens, for example one for stage left, one for the control room and one for the green room.</td></tr>
+  <tr><td><span class="chip block">Block</span></td><td>A box on a screen, with a fill color, border and rounded corners. Blocks hold layers.</td></tr>
+  <tr><td><span class="chip layer">Layer</span></td><td>Content inside a block: <b>text</b>, a <b>shape</b>, an <b>image</b> or a <b>bar</b>. A block can have any number of layers stacked on top of each other.</td></tr>
+  <tr><td>Group</td><td>A layer that holds other layers, like a block within a block.</td></tr>
+  <tr><td>Template</td><td>One or more saved blocks, complete with their layers and rules, ready to reuse on any screen.</td></tr>
+</table>
+<div class="note">
+  <p>
+    <b>Everything scales.</b> Positions and sizes are stored relative to whatever contains them: blocks relative to the screen,
+    layers relative to their block. That means a 16:9 screen looks exactly the same on a 720p monitor, a 1080p TV or a 4K projector,
+    and when you resize a block, everything inside it resizes with it.
+  </p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="screens">Screens</h2>
+<p>Click an empty part of the canvas (or press <kbd>Esc</kbd> until nothing is selected) to see the screen’s settings.</p>
+<figure class="panel">
+  <img src="img/screen-settings.png" alt="Screen settings: name, aspect ratio, pixel size, background and display output">
+  <figcaption>Screen settings: name, aspect ratio, pixel size, background and display output.</figcaption>
+</figure>
+<table>
+  <tr><th>Setting</th><th>What it does</th></tr>
+  <tr><td>Aspect ratio</td><td>The shape of the display: 16:9 (most TVs and monitors), 16:10, 4:3, 21:9, 32:9, 1:1, 9:16 (portrait), or a custom ratio.</td></tr>
+  <tr><td>Pixel size</td><td>The resolution you design at, such as 1920×1080 or 3840×2160. It sets the units when you work in pixels, and the scale of border widths and corners. The layout still scales to any output; changing this keeps the layout looking the same.</td></tr>
+  <tr><td>Background</td><td>A color and/or image behind everything. Colors and images can come from variables.</td></tr>
+  <tr><td>Background feedback</td><td>Rules that change the background color, for example turning the whole screen red when a timer runs out. See <a href="#rules">Feedback rules</a>.</td></tr>
+  <tr><td>Display output</td><td>How to open this screen on a display. See <a href="#displays">Showing your screens</a>.</td></tr>
+</table>
+<p>In the <b>Screens</b> list, <b>+ New</b> adds a screen. Each screen in the list has buttons to open its display (↗), duplicate it, or delete it.</p>
+
+<!-- ===================================================================== -->
+<h2 id="blocks">Blocks</h2>
+<p>Click <b>+ Block</b> in the top bar or the Blocks list. Then:</p>
+<ul>
+  <li><b>Move</b> a block by dragging it, and <b>resize</b> it with the handles. Hold <kbd>Shift</kbd> while resizing to keep its proportions.</li>
+  <li>Blocks <b>snap</b> to the screen edges and center and to other blocks; blue guide lines show what it snapped to. Hold <kbd>Alt</kbd> to drag without snapping, or turn <b>Snap</b> off in the top bar.</li>
+  <li>Select several blocks with <kbd>Shift</kbd>-click or by dragging a box around them on an empty area.</li>
+</ul>
+<figure>
+  <img src="img/block-selected.png" alt="A block selected in the editor, with its settings in the inspector">
+  <figcaption>A selected block. Its settings are in the inspector on the right.</figcaption>
+</figure>
+<h3>Block settings</h3>
+<table>
+  <tr><th>Section</th><th>Settings</th></tr>
+  <tr><td>Position &amp; size</td><td>Exact position and size, alignment, stacking order, and <b>Save as template</b>.</td></tr>
+  <tr><td>Layers</td><td>The block’s layers. Click one to edit it, and add new ones with <b>+ Text</b>, <b>+ Shape</b>, <b>+ Image</b>, <b>+ Bar</b> and <b>+ Group</b>.</td></tr>
+  <tr><td>Style</td><td>Fill color, border width and color, corner radius, opacity, <b>Clip layers</b> (hide anything that sticks out of the block), and <b>Hidden</b>.</td></tr>
+  <tr><td>Feedback rules</td><td>Change the block’s look when Companion values change. See <a href="#rules">Feedback rules</a>.</td></tr>
+  <tr><td>Button press</td><td>Turn on <b>Press a Companion button</b> and enter its location as <code>page/row/column</code> (for example <code>1/0/2</code>). Clicking or tapping the block on a display then presses that button, which makes a display work as a simple touch panel.</td></tr>
+</table>
+<p>
+  In the Blocks list, <b>ƒ</b> marks a block with feedback rules and <b>⏎</b> one that presses a button. The dot on the right
+  shows and hides the block.
+</p>
+<div class="tip"><p><b>Hidden</b> means hidden unless a rule shows it. That’s how you make things that appear only when needed, like an ON AIR sign. Hidden items still show faintly in the editor so you can work on them.</p></div>
+
+<!-- ===================================================================== -->
+<h2 id="layers">Layers</h2>
+<p>
+  To work with a block’s layers, <b>double-click the block</b> (or select it and press <kbd>Enter</kbd>), or click a layer in the
+  inspector’s Layers list. The rest of the screen dims, and you can click, drag and resize layers inside the block.
+  Press <kbd>Esc</kbd> to step back out.
+</p>
+<figure>
+  <img src="img/layer-selected.png" alt="A bar layer selected inside a block">
+  <figcaption>Editing the layers of “Video countdown”. The selected bar layer’s settings are on the right; the label above the canvas reminds you where you are.</figcaption>
+</figure>
+<table>
+  <tr><th>Layer</th><th>Use it for</th></tr>
+  <tr><td>Text</td><td>Labels and live values. Mix plain text, variables and formatting. See <a href="#text">Text and formatting</a>.</td></tr>
+  <tr><td>Shape</td><td>A colored rectangle or rounded box, with an optional border. Good for backgrounds, dividers and status lights.</td></tr>
+  <tr><td>Image</td><td>A logo or picture. Click <b>Upload…</b> to add one, or enter a web address or a variable. <b>Fit</b> chooses whether the image fits inside, fills, or stretches to the layer.</td></tr>
+  <tr><td>Bar</td><td>Meters, progress bars and countdowns. See <a href="#bars">Bars, meters and countdowns</a>.</td></tr>
+  <tr><td>Group</td><td>Several layers that move and resize together. See <a href="#groups">Groups</a>.</td></tr>
+</table>
+<p>Every layer also has:</p>
+<ul>
+  <li><b>Position &amp; visibility</b>: position and size within the block, alignment, opacity and Hidden. <b>Fill block</b> makes the layer cover the whole block.</li>
+  <li><b>Background &amp; corners</b>: a background color and/or image for just this layer, and rounded corners.</li>
+  <li><b>Feedback rules</b>: change this layer when Companion values change.</li>
+</ul>
+<p>Layers higher in the Layers list are drawn on top. Use the <b>Arrange</b> buttons to move a layer forward or backward.</p>
+
+<!-- ===================================================================== -->
+<h2 id="text">Text and formatting</h2>
+<figure class="panel">
+  <img src="img/text-layer.png" alt="Text layer settings with the formatting toolbar">
+  <figcaption>A text layer, with the variable on the second line selected and set in italic.</figcaption>
+</figure>
+<p>
+  Type into the text box. Add Companion variables anywhere, such as <code>Camera $(atem:pgm)</code>. Below the box, a green
+  line shows what the text says right now. Press <kbd>Enter</kbd> for a new line; leave a blank line to start a new paragraph.
+</p>
+
+<h3>Formatting words and variables</h3>
+<p>Select any words or variables, then use the toolbar above the text box:</p>
+<table>
+  <tr><th>Button</th><th>Does</th><th>Shortcut</th></tr>
+  <tr><td><b>B</b></td><td>Bold</td><td><kbd>⌘B</kbd> / <kbd>Ctrl+B</kbd></td></tr>
+  <tr><td><i>I</i></td><td>Italic</td><td><kbd>⌘I</kbd> / <kbd>Ctrl+I</kbd></td></tr>
+  <tr><td><u>U</u></td><td>Underline</td><td><kbd>⌘U</kbd> / <kbd>Ctrl+U</kbd></td></tr>
+  <tr><td><s>S</s></td><td>Strikethrough</td><td></td></tr>
+  <tr><td>A</td><td>Text color. Pick the color with the swatch next to it.</td><td></td></tr>
+  <tr><td>ab</td><td>Highlight (a colored background behind the words)</td><td></td></tr>
+  <tr><td>Size</td><td>Make the selection 50% to 200% of the layer’s text size</td><td></td></tr>
+  <tr><td>Clear</td><td>Remove formatting from the selection, or from everything if nothing is selected</td><td></td></tr>
+</table>
+<p>Applying the same format again removes it.</p>
+<details>
+  <summary>Typing formatting by hand</summary>
+  <p>The toolbar adds markers to your text. You can also type them yourself:</p>
+  <table>
+    <tr><th>Type</th><th>Result</th></tr>
+    <tr><td><code>**words**</code></td><td><b>bold</b></td></tr>
+    <tr><td><code>_words_</code> or <code>*words*</code></td><td><i>italic</i></td></tr>
+    <tr><td><code>++words++</code></td><td><u>underline</u></td></tr>
+    <tr><td><code>~~words~~</code></td><td><s>strikethrough</s></td></tr>
+    <tr><td><code>{color:#ff4d4d}words{/color}</code></td><td>text color</td></tr>
+    <tr><td><code>{bg:#ffd400}words{/bg}</code></td><td>highlight</td></tr>
+    <tr><td><code>{size:150%}words{/size}</code></td><td>bigger or smaller text</td></tr>
+    <tr><td><code>{weight:300}words{/weight}</code></td><td>font weight, 100 to 900</td></tr>
+    <tr><td><code>{font:Oswald}words{/font}</code></td><td>a different font</td></tr>
+  </table>
+</details>
+
+<h3>Text settings</h3>
+<table>
+  <tr><th>Setting</th><th>What it does</th></tr>
+  <tr><td>Size</td><td><b>Auto-fit</b> makes the text as large as fits in the layer, up to <b>Max size</b>, so changing values never overflow. <b>Fixed</b> uses one size. Sizes are in % of the layer’s height.</td></tr>
+  <tr><td>Font, Weight, Italic, Color</td><td>The look of the whole layer. Color can be a variable.</td></tr>
+  <tr><td>Align, Vertical</td><td>Where the text sits in the layer.</td></tr>
+  <tr><td>Line spacing</td><td>Space between lines, as a multiple of the text size.</td></tr>
+  <tr><td>Paragraph spacing</td><td>Extra space between paragraphs (separated by a blank line).</td></tr>
+  <tr><td>Wrap lines</td><td>Wrap long text onto more lines instead of shrinking it onto one.</td></tr>
+  <tr><td>Padding</td><td>Space between the text and the layer’s edges.</td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h2 id="bars">Bars, meters and countdowns</h2>
+<p>A bar layer shows a value as a filled bar, in any direction. Set <b>Shows</b> to one of:</p>
+<table>
+  <tr><th>Shows</th><th>Use it for</th></tr>
+  <tr><td>A number (min to max)</td><td>Levels and percentages. Give it a variable that holds a number, such as <code>$(audio:level)</code>, and the range, such as 0 to 100.</td></tr>
+  <tr><td>Countdown (time left)</td><td>Video and timer progress. The bar starts empty and fills as the time counts down to 0.</td></tr>
+  <tr><td>Time elapsed</td><td>A clock that counts up. The bar fills as the time reaches the duration.</td></tr>
+</table>
+<figure class="pair">
+  <div><img src="img/bar-countdown.png" alt="Bar settings set to countdown"><figcaption>A countdown bar for a playing video.</figcaption></div>
+  <div><img src="img/bar-thresholds.png" alt="Color thresholds for a bar"><figcaption>Color thresholds: amber with 30 seconds left, red with 10. The active one is highlighted.</figcaption></div>
+</figure>
+
+<h3>Countdown example: a 2:20 video</h3>
+<ol class="steps">
+  <li>Add a bar layer and set <b>Shows</b> to <b>Countdown (time left)</b>.</li>
+  <li>In <b>Time left</b>, enter the video’s time-remaining variable from Companion.</li>
+  <li>In <b>Duration</b>, enter the video’s duration variable, or type the length, such as <code>2:20</code>.</li>
+</ol>
+<p>
+  At 2:20 left the bar is empty; at 1:10 it’s half full; at 0:00 it’s full. The <b>Now</b> line shows the live reading, such as
+  “84% full · 0:22 left of 2:20”.
+</p>
+<ul>
+  <li>Times can be written as seconds (<code>140</code>), <code>2:20</code>, <code>1:02:20</code> or <code>01:02:20:12</code> (frames are ignored).</li>
+  <li>If a variable gives a plain number, set <b>Plain numbers</b> to Seconds or Milliseconds to match.</li>
+  <li><b>Smooth</b> keeps the bar gliding between Companion’s once-a-second updates. If the video pauses, the bar stops within a second.</li>
+  <li><b>Reverse</b> starts the bar full and empties it instead.</li>
+  <li><b>Direction</b> fills left-to-right, right-to-left, bottom-to-top or top-to-bottom.</li>
+</ul>
+
+<h3>Color thresholds</h3>
+<p>
+  Thresholds change the bar’s color as it fills, for example amber at 80 and red at 90 on an audio meter. Click <b>+ Threshold</b>,
+  then set where it starts and its color. The furthest threshold the bar has reached sets the color.
+</p>
+<ul>
+  <li><b>Measured in: Value</b> (or <b>Time</b> for countdowns) uses the bar’s own numbers, for example <code>80</code> on a 0–100 meter, or <code>0:30</code> for 30 seconds left.</li>
+  <li><b>Measured in: % of bar</b> uses how full the bar is, for example <code>90</code> for 90% full.</li>
+</ul>
+<p class="note">A feedback rule that sets the fill color overrides the thresholds while it matches.</p>
+
+<!-- ===================================================================== -->
+<h2 id="groups">Groups</h2>
+<p>
+  A group is a layer that holds other layers, like a small block inside a block. Group layers that belong together, such as a
+  label, a value and an indicator, so they move, resize, hide and show as one.
+</p>
+<ul>
+  <li><b>Group:</b> select several layers (<kbd>Shift</kbd>-click, or <kbd>⌘A</kbd> / <kbd>Ctrl+A</kbd> for all) and press <kbd>⌘G</kbd> / <kbd>Ctrl+G</kbd>.</li>
+  <li><b>Ungroup:</b> select the group and press <kbd>⇧⌘G</kbd> / <kbd>Shift+Ctrl+G</kbd>. Everything stays where it is.</li>
+  <li><b>Work inside a group:</b> double-click it, or select it and press <kbd>Enter</kbd>. <kbd>Esc</kbd> steps back out.</li>
+  <li>Groups have their own background, border, corners, clipping and feedback rules, and can contain other groups.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<h2 id="variables">Variables</h2>
+<p>
+  A variable is written <code>$(connection:name)</code>, exactly as Companion shows it, for example <code>$(internal:time_hms)</code>
+  or <code>$(atem:pgm)</code>. You can find variable names in Companion’s <b>Variables</b> page.
+</p>
+<p>Variables work in text, in color fields, in image addresses, and in feedback rule conditions.</p>
+<table>
+  <tr><th>Write</th><th>Means</th></tr>
+  <tr><td><code>$(atem:pgm)</code></td><td>The variable from connection <code>[0]</code>, your main Companion</td></tr>
+  <tr><td><code>[1]$(atem:pgm)</code></td><td>The same variable from connection <code>[1]</code></td></tr>
+  <tr><td><code>\$(atem:pgm)</code></td><td>The text “$(atem:pgm)” itself, not its value</td></tr>
+</table>
+<p>
+  Under most fields that contain a variable, a green line shows its current value, so you can check it’s right while you work.
+  Colors can come from variables too, including the color numbers Companion uses.
+</p>
+
+<!-- ===================================================================== -->
+<h2 id="rules">Feedback rules</h2>
+<p>
+  Rules change how a screen, block or layer looks when Companion values change: turn a block red when its camera is on program,
+  show a warning when a timer runs low, or replace a label’s text.
+</p>
+<figure class="panel">
+  <img src="img/rules.png" alt="A feedback rule that turns the block red when camera 2 is on program">
+  <figcaption>When <code>$(atem:pgm)</code> equals 2, fill the block red and change its border. The green dot means the rule matches right now.</figcaption>
+</figure>
+<h3>Making a rule</h3>
+<ol class="steps">
+  <li>Open <b>Feedback rules</b> on the item and click <b>+ Add rule</b>.</li>
+  <li>Under <b>When</b>, enter a variable, choose a comparison, and enter the value to compare with. That value can be another variable. Add more conditions with <b>+ condition</b>, and choose whether <b>all</b> or <b>any</b> of them must match.</li>
+  <li>Under <b>Then</b>, tick what should change and set the new value.</li>
+</ol>
+<table>
+  <tr><th>Comparison</th><th>Matches when</th></tr>
+  <tr><td>= and ≠</td><td>The value is (or isn’t) exactly this</td></tr>
+  <tr><td>&gt; ≥ &lt; ≤</td><td>Numbers are greater or less than this</td></tr>
+  <tr><td>contains / does not contain</td><td>The text includes (or doesn’t include) this</td></tr>
+  <tr><td>is empty / is not empty</td><td>The value is (or isn’t) blank</td></tr>
+</table>
+<p>
+  Rules can change the fill color, text color, border color, background color, opacity, visibility, make the item flash, or replace
+  its text (with formatting). What’s available depends on the item.
+</p>
+<div class="note">
+  <p><b>Several rules?</b> They’re checked from top to bottom, and for each property the first rule that matches wins. Use the arrows to reorder them.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="templates">Templates</h2>
+<p>Templates let you build something once, such as a styled clock or a camera tally, and reuse it on any screen.</p>
+<ul>
+  <li><b>Save:</b> select one or more blocks and click <b>Save as template</b> in the inspector, or <b>+ Save selection</b> in the Templates list.</li>
+  <li><b>Place:</b> drag a template from the Templates list onto the canvas. It snaps into place like a move.</li>
+  <li><b>Insert:</b> click <b>Insert</b> to put it exactly where it was when you saved it.</li>
+</ul>
+<p>Templates keep their real proportions when you use them on a screen with a different shape.</p>
+
+<!-- ===================================================================== -->
+<h2 id="positioning">Precise positioning</h2>
+<h3>Zoom</h3>
+<ul>
+  <li>Pinch on a trackpad, or hold <kbd>⌘</kbd> / <kbd>Ctrl</kbd> and scroll, to zoom toward the pointer.</li>
+  <li>Use the zoom controls in the top bar: <b>−</b>/<b>+</b>, the slider, or type a percentage. <b>100%</b> fits the whole screen.</li>
+  <li>Shortcuts: <kbd>⌘=</kbd> zoom in, <kbd>⌘−</kbd> zoom out, <kbd>⌘0</kbd> back to 100% (<kbd>Ctrl</kbd> on Windows and Linux).</li>
+  <li>While zoomed in, scroll to pan, or hold <kbd>Space</kbd> and drag.</li>
+</ul>
+<h3>Percent or pixels</h3>
+<p>
+  Switch <b>% / px</b> in the top bar, or above any position fields, to work in percentages or in pixels. In pixels, blocks are measured
+  from the screen’s top-left corner and layers from their block’s top-left, using the screen’s <b>Pixel size</b>. Dragging and resizing
+  land on whole pixels, and the grid is in pixels.
+</p>
+<h3>Nudge, align and distribute</h3>
+<ul>
+  <li>Arrow keys move the selection by 0.1% (1 px in pixel mode). Hold <kbd>Shift</kbd> for 1% (10 px).</li>
+  <li><b>Align</b> lines up one item with its screen, block or group, or several items with each other.</li>
+  <li><b>Distribute</b> spaces three or more selected items evenly.</li>
+  <li>Turn on a <b>grid</b> in the top bar to snap to regular steps.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<h2 id="displays">Showing your screens</h2>
+<p>Each screen is a web page. Open it in a browser on any computer, tablet or smart TV that can reach the computer running Feedback Alley.</p>
+<h3>Give a screen its own address (recommended)</h3>
+<ol class="steps">
+  <li>Select the screen (click an empty part of the canvas) and open <b>Display output</b>.</li>
+  <li>Turn on <b>Serve this screen on its own port</b> and choose a port number, such as 8101.</li>
+  <li>On the display computer, open <code>http://&lt;address&gt;:8101/</code>, where <code>&lt;address&gt;</code> is the network address of the computer running Feedback Alley.</li>
+</ol>
+<p>
+  The address stays the same even if you rename the screen. To show a different screen on that display, move the port to another
+  screen; open displays switch over automatically.
+</p>
+<div class="tip"><p>To find the address, choose <b>File → Copy Network Address</b> in Feedback Alley. If it lists more than one, use the one on the same network as your displays.</p></div>
+<h3>Other ways to open a display</h3>
+<ul>
+  <li><b>Open display ↗</b> in the top bar opens the current screen in your browser.</li>
+  <li>Every screen also has a permanent link, shown under <b>Display output</b>, with <b>Copy URL</b>.</li>
+</ul>
+<h3>On the display</h3>
+<ul>
+  <li><b>Double-click</b> to go full screen (and again to leave).</li>
+  <li>The mouse pointer hides when it isn’t moving.</li>
+  <li>Edits you make in the editor appear on displays straight away; there’s no need to reload.</li>
+  <li>Blocks with a <b>button press</b> press their Companion button when clicked or tapped.</li>
+</ul>
+<p class="warn">Displays need Feedback Alley to be running. On macOS it keeps running when you close the window; on Windows and Linux, leave the window open.</p>
+
+<!-- ===================================================================== -->
+<h2 id="backup">Backup and moving projects</h2>
+<p>Feedback Alley saves your work automatically as you go. To keep a copy or move a project to another computer:</p>
+<ul>
+  <li><b>Export:</b> open <b>⚙ Settings → Backup → Export…</b>, then choose a name and where to save it.</li>
+  <li><b>Import:</b> <b>Import…</b> replaces the current project with a saved file. You can undo it.</li>
+</ul>
+<p class="note">
+  Exports contain your screens, templates, connections and settings, but not uploaded images. To bring images along, also copy the
+  <code>assets</code> folder from <b>File → Show Data Folder</b> into the same folder on the other computer.
+</p>
+<p>Where your project is saved:</p>
+<table>
+  <tr><td>macOS</td><td><code>~/Library/Application Support/Feedback Alley/data</code></td></tr>
+  <tr><td>Windows</td><td><code>%APPDATA%\Feedback Alley\data</code></td></tr>
+  <tr><td>Linux</td><td><code>~/.config/Feedback Alley/data</code></td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h2 id="shortcuts">Keyboard shortcuts</h2>
+<p>On Windows and Linux, use <kbd>Ctrl</kbd> where these show <kbd>⌘</kbd>.</p>
+<table>
+  <tr><th>Keys</th><th>Action</th></tr>
+  <tr><td><kbd>⌘Z</kbd> / <kbd>⇧⌘Z</kbd></td><td>Undo / redo</td></tr>
+  <tr><td><kbd>⌘C</kbd> / <kbd>⌘V</kbd></td><td>Copy / paste (also between screens)</td></tr>
+  <tr><td><kbd>⌘D</kbd></td><td>Duplicate</td></tr>
+  <tr><td><kbd>Delete</kbd></td><td>Delete the selection</td></tr>
+  <tr><td><kbd>Enter</kbd> or double-click</td><td>Work inside a block or group</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>Step out one level</td></tr>
+  <tr><td><kbd>⌘A</kbd></td><td>Select all layers in the current block or group</td></tr>
+  <tr><td><kbd>⌘G</kbd> / <kbd>⇧⌘G</kbd></td><td>Group / ungroup layers</td></tr>
+  <tr><td>Arrow keys (+ <kbd>Shift</kbd>)</td><td>Nudge 0.1% (1%), or 1 px (10 px) in pixel mode</td></tr>
+  <tr><td><kbd>Shift</kbd> while resizing</td><td>Keep proportions</td></tr>
+  <tr><td><kbd>Alt</kbd> while dragging</td><td>Don’t snap</td></tr>
+  <tr><td><kbd>⌘=</kbd> / <kbd>⌘−</kbd> / <kbd>⌘0</kbd></td><td>Zoom in / out / back to 100%</td></tr>
+  <tr><td>Pinch, or <kbd>⌘</kbd> + scroll</td><td>Zoom toward the pointer</td></tr>
+  <tr><td><kbd>Space</kbd> + drag</td><td>Pan while zoomed</td></tr>
+  <tr><td><kbd>⌘B</kbd> / <kbd>⌘I</kbd> / <kbd>⌘U</kbd></td><td>Bold / italic / underline the selected text</td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h4>The top bar says “Companion unreachable”</h4>
+<ul>
+  <li>Check the address in <b>⚙ Settings</b> and click <b>Test</b>. It needs the <code>http://</code> and the port, usually <code>:8000</code>.</li>
+  <li>Make sure Companion is running and that this computer can reach it on the network. A firewall on either computer can block it.</li>
+</ul>
+
+<h4>A variable shows nothing</h4>
+<ul>
+  <li>Check the spelling against Companion’s Variables page, including the connection name before the colon.</li>
+  <li>If it comes from a second Companion, put its connection number in front, such as <code>[1]$(…)</code>.</li>
+</ul>
+
+<h4>A display can’t connect</h4>
+<ul>
+  <li>Use the computer’s network address (<b>File → Copy Network Address</b>), not <code>localhost</code>, on other devices.</li>
+  <li>Make sure Feedback Alley is running, and that the display is on the same network.</li>
+  <li>On Windows, allow Feedback Alley through Windows Defender Firewall for private networks.</li>
+  <li>If a screen’s own port shows a warning such as “Port is already in use”, choose a different port number.</li>
+</ul>
+
+<h4>Feedback Alley says port 8090 is in use</h4>
+<p>
+  Another program is using it, so Feedback Alley picked the next free port and told you which. Use the new address on your displays,
+  or close the other program and restart Feedback Alley.
+</p>
+
+<h4>macOS says the app “is damaged” or won’t open</h4>
+<p>See <a href="#install">Install and first launch</a> for the <b>Open Anyway</b> steps and the Terminal command.</p>
+
+<h4>Images are missing after moving a project</h4>
+<p>Exports don’t include uploaded images. Copy the <code>assets</code> folder as described in <a href="#backup">Backup and moving projects</a>.</p>
+
+<footer>
+  Feedback Alley is free and open-source software, released under the MIT License.
+  It is not affiliated with Bitfocus. Companion is a product of Bitfocus AS.
+</footer>
+</main>
+</div>
+</body>
+</html>

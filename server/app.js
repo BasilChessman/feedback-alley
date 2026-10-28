@@ -44,13 +44,16 @@ export function startServer({ port = 8090, host = '0.0.0.0', dataDir, distDir = 
 
     const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
     let file = path.join(distDir, path.normalize(urlPath).replace(/^(\.\.[/\\])+/, ''));
+    // a folder with its own index.html (the user guide) is served as that page
+    if (file.startsWith(distDir) && fs.existsSync(path.join(file, 'index.html')) && file !== distDir) file = path.join(file, 'index.html');
     if (!file.startsWith(distDir) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       file = path.join(distDir, 'index.html');
     }
     const ext = path.extname(file);
     res.writeHead(200, {
       'Content-Type': TYPES[ext] || 'application/octet-stream',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable',
+      // only Vite's hashed build files never change; everything else (the guide) is revalidated
+      'Cache-Control': urlPath.startsWith('/assets/') && ext !== '.html' ? 'public, max-age=31536000, immutable' : 'no-cache',
     });
     fs.createReadStream(file).pipe(res);
   });
