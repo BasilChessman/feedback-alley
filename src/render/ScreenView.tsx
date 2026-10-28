@@ -180,10 +180,13 @@ function FitText({ html, maxPct, padding, style, deps }: { html: string; maxPct:
       const w = box.clientWidth - pad * 2;
       const h = H - pad * 2;
       if (w <= 0 || h <= 0) return;
-      el.style.padding = `${pad}px`;
+      // Padding goes on the outer box, so the text is measured against the
+      // space inside it. (Measured with its own padding, text that runs into
+      // the right-hand padding doesn't count as overflowing.)
+      box.style.padding = `${pad}px`;
       const fits = (size: number) => {
         el.style.fontSize = `${size}px`;
-        return el.scrollWidth <= box.clientWidth + 0.5 && el.offsetHeight <= H + 0.5;
+        return el.scrollWidth <= el.clientWidth + 0.5 && el.offsetHeight <= h + 0.5;
       };
       let lo = 1;
       let hi = Math.max(1, (H * maxPct) / 100);
