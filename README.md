@@ -84,6 +84,7 @@ To build locally: `npm run dist:mac`, `npm run dist:win` or `npm run dist:linux`
 ## Feedback (from Companion Dashboard, extended)
 
 - Variables in any text, color or image field: `$(internal:time_hms)`, `[1]$(atem:pgm)` for other connections, `\$(…)` for literal output (no markdown).
+- **Find & Replace** (block inspector, above Layers): every variable and piece of text a block uses, each with an editable copy. Rename a connection once (`device1` → `device2`), find and replace across all of them, or edit one by one, with a live check of each new name; then **Duplicate with changes** or **Apply**. Works on several blocks at once.
 - Text formatting for any selected words or variables, using the toolbar above the text box (⌘B / ⌘I / ⌘U):
   `**bold**`, `_italic_` (or `*italic*`), `++underline++`, `~~strike~~`, `{color:#f00}…{/color}`,
   `{bg:#ff0}…{/bg}` (highlight), `{size:150%}…{/size}` (relative to the layer's text), plus `{weight:300}` and

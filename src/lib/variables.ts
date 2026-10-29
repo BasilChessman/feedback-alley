@@ -39,6 +39,47 @@ export function collectRefs(obj: unknown): string[] {
   return [...set].sort();
 }
 
+// A reference key split into its connection index and "conn:name" variable.
+export function splitKey(key: string): { conn: number; variable: string } {
+  const m = /^(?:\[(\d+)\])?\$\((.*)\)$/.exec(key);
+  return m ? { conn: m[1] ? parseInt(m[1], 10) : 0, variable: m[2] } : { conn: 0, variable: key };
+}
+
+export const isVariableName = (v: string) => /^[^:)\s]+:[^)\s]+$/.test(v);
+
+// Rename variables in every string inside obj (in place). renames maps a
+// reference key ("$(device1:status)" or "[1]$(atem:pgm)") to its new
+// "conn:name"; the connection index and any escape are kept.
+export function renameRefs(obj: unknown, renames: Record<string, string>) {
+  const fix = (s: string) =>
+    s.replace(VAR_RE, (full, esc: string | undefined, conn: string | undefined, variable: string) => {
+      const to = renames[refKey(conn ? parseInt(conn, 10) : 0, variable)];
+      return to ? `${esc ?? ''}${conn ? `[${conn}]` : ''}$(${to})` : full;
+    });
+  const walk = (o: unknown) => {
+    if (!o || typeof o !== 'object') return;
+    const rec = o as Record<string, unknown>;
+    for (const k of Object.keys(rec)) {
+      const v = rec[k];
+      if (typeof v === 'string') {
+        if (v.includes('$(')) rec[k] = fix(v);
+      } else walk(v);
+    }
+  };
+  walk(obj);
+}
+
+// Replace text outside variable references, leaving every $(...) as it is.
+export function replaceOutsideRefs(source: string, find: string, replace: string) {
+  let out = '';
+  let at = 0;
+  for (const m of source.matchAll(VAR_RE)) {
+    out += source.slice(at, m.index).split(find).join(replace) + m[0];
+    at = m.index! + m[0].length;
+  }
+  return out + source.slice(at).split(find).join(replace);
+}
+
 // Characters with formatting meaning; escaped variables (\$(…)) have them backslash-escaped.
 const MD_CHARS = /([*\\_~+{}])/g;
 
