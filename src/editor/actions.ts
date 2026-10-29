@@ -70,6 +70,24 @@ export function useActions() {
   };
   const selectedLayers = (s: Screen) => container(s)?.layers.filter((l) => sel.layers.includes(l.id)) ?? [];
 
+  // Copies sit slightly offset and become the selection. edit can change each
+  // copy (i = its original's position in blockIds) before it's added.
+  const duplicateBlocks = (blockIds: string[], edit?: (copy: Block, i: number) => void) => {
+    const ids: string[] = [];
+    updateScreen((s) => {
+      for (const b of s.blocks.filter((b) => blockIds.includes(b.id))) {
+        const c = cloneBlock(b);
+        c.x = Math.min(c.x + 2, 100 - c.w);
+        c.y = Math.min(c.y + 2, 100 - c.h);
+        c.name += ' copy';
+        edit?.(c, blockIds.indexOf(b.id));
+        ids.push(c.id);
+        s.blocks.push(c);
+      }
+    });
+    setSel(selectBlocks(ids));
+  };
+
   return {
     addBlock() {
       // cascade new blocks so they don't land exactly on top of each other
@@ -183,21 +201,10 @@ export function useActions() {
           }
         });
         setSel({ ...sel, layers: ids });
-      } else if (sel.blocks.length) {
-        const ids: string[] = [];
-        updateScreen((s) => {
-          for (const b of s.blocks.filter((b) => sel.blocks.includes(b.id))) {
-            const c = cloneBlock(b);
-            c.x = Math.min(c.x + 2, 100 - c.w);
-            c.y = Math.min(c.y + 2, 100 - c.h);
-            c.name += ' copy';
-            ids.push(c.id);
-            s.blocks.push(c);
-          }
-        });
-        setSel(selectBlocks(ids));
-      }
+      } else if (sel.blocks.length) duplicateBlocks(sel.blocks);
     },
+
+    duplicateBlocks,
 
     copy() {
       if (hasLayers) clipboard = { kind: 'layers', layers: structuredClone(selectedLayers(screen)), pxWidth: screenPx(screen).w };

@@ -122,6 +122,7 @@
     <li><a href="#variables">Variables</a></li>
     <li><a href="#rules">Feedback rules</a></li>
     <li><a href="#templates">Templates</a></li>
+    <li><a href="#find-replace">Find &amp; Replace</a></li>
     <li><a href="#positioning">Precise positioning</a></li>
     <li><a href="#displays">Showing your screens</a></li>
     <li><a href="#backup">Backup and moving projects</a></li>
@@ -503,6 +504,8 @@
   Colors can come from variables too, including the color numbers Companion uses.
 </p>
 
+<p>To point a block at other variables, for example a copy for <code>device2</code>, use <a href="#find-replace">Find &amp; Replace</a>.</p>
+
 <!-- ===================================================================== -->
 <h2 id="rules">Feedback rules</h2>
 <p>
@@ -545,6 +548,45 @@
 </ul>
 <p>Templates keep their real proportions when you use them on a screen with a different shape.</p>
 
+<h2 id="find-replace">Find &amp; Replace</h2>
+<p>
+  Often you need the same block several times, once for <code>device1</code>, once for <code>device2</code> and so on.
+  Instead of retyping every variable, select the block and open <b>Find &amp; Replace</b> in the right pane, just above
+  <b>Layers</b>. It lists every variable the block uses and every piece of text in it (the block name, text layers, headers
+  and text set by feedback rules), each in a box you can edit. The originals are shown above each box.
+</p>
+<figure>
+  <img src="img/find-replace.png" alt="The Find and Replace section: 1 replaced with 2, the device1 connection renamed to device2 with live values under each variable, and the block name and header text changed to Camera 2" style="max-width: 320px">
+  <figcaption>Connection <code>device1</code> renamed to <code>device2</code>, and “1” replaced with “2” in the text. Changed boxes are highlighted.</figcaption>
+</figure>
+<p>There are three ways to make changes, and you can mix them:</p>
+<ul>
+  <li><b>Connection</b>: change <code>device1</code> to <code>device2</code> once and every variable from that connection follows.</li>
+  <li><b>Find → Replace</b> (top row): replaces text in every variable name and every piece of text at once. For example,
+    <code>1</code> → <code>2</code> turns “Camera 1” into “Camera 2” and <code>$(atem:aux1)</code> into <code>$(atem:aux2)</code>.
+    Press <b>Replace</b> or Enter. Variables inside text are left to the Variables list, so the two always match.</li>
+  <li><b>By hand</b>: edit any single name or text.</li>
+</ul>
+<p>
+  Under each new variable name you see its current value from Companion, or <b>Not found in Companion</b> if the name has a
+  typo, so you can check before applying anything.
+</p>
+<p>When it looks right:</p>
+<ul>
+  <li><b>Duplicate with changes</b> makes a copy of the block with the changes, just beside it, and selects it. The original stays as it is.</li>
+  <li><b>Apply</b> changes the block itself.</li>
+  <li><b>Reset</b> throws the edits away.</li>
+</ul>
+<p>
+  Variables are renamed everywhere they’re used: text, headers, images, bars and feedback rules. Select several blocks to change
+  them all at once; each piece of text is labeled with its block’s name. <b>Undo</b> (⌘Z) takes a change back in one step.
+</p>
+<p class="tip">
+  Quick way to make a row of devices: set up the first block, then use <b>Duplicate with changes</b> with <code>1</code> → <code>2</code>,
+  select the new copy and repeat with <code>2</code> → <code>3</code>, and so on.
+</p>
+
+<!-- ===================================================================== -->
 <!-- ===================================================================== -->
 <h2 id="positioning">Precise positioning</h2>
 <h3>Zoom</h3>

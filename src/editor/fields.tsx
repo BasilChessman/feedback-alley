@@ -8,8 +8,17 @@ import { ColorSwatch } from './ColorPicker';
 // Live values for inline previews under fields that contain variables.
 export const ValuesCtx = createContext<Values>({});
 
-export function Section({ title, children, actions, defaultOpen = true }: { title: string; children: ReactNode; actions?: ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
+// Open/closed state of sections given a remember key, kept while the app runs.
+const sectionOpen = new Map<string, boolean>();
+
+export function Section({ title, children, actions, defaultOpen = true, remember }: {
+  title: string; children: ReactNode; actions?: ReactNode; defaultOpen?: boolean; remember?: string;
+}) {
+  const [open, setOpenState] = useState(() => (remember && sectionOpen.get(remember)) ?? defaultOpen);
+  const setOpen = (v: boolean) => {
+    if (remember) sectionOpen.set(remember, v);
+    setOpenState(v);
+  };
   return (
     <section className="section">
       <header onClick={() => setOpen(!open)}>

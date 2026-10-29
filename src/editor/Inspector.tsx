@@ -10,6 +10,7 @@ import { useActions, type AlignMode } from './actions';
 import { RulesEditor, type RuleProp } from './RulesEditor';
 import { RichTextField } from './RichTextField';
 import { BarProps } from './BarProps';
+import { VariablesPanel } from './VariablesPanel';
 import { askText } from './askText';
 import { nearestAnchor } from '../lib/fixed';
 import { HEADER_MAX, HEADER_MIN, newHeader, supportsHeader } from '../lib/header';
@@ -400,6 +401,8 @@ function BlockInspector({ block }: { block: Block }) {
         </span>
       </Section>
 
+      <VariablesPanel blocks={[block]} />
+
       <Section
         title={`Layers (${countLayers(block.layers)})`}
         actions={
@@ -534,7 +537,8 @@ function LayerTree({ block, layers, parentPath, depth = 0 }: { block: Block; lay
 // ---------------------------------------------------------------------------
 
 function MultiInspector() {
-  const { sel } = useEditor();
+  const { screen, sel } = useEditor();
+  const blocks = sel.blocks.map((id) => screen.blocks.find((b) => b.id === id)).filter((b): b is Block => !!b);
   const actions = useActions();
   return (
     <div className="inspector mode-multi">
@@ -555,6 +559,7 @@ function MultiInspector() {
           </Row>
         )}
       </Section>
+      <VariablesPanel blocks={blocks} />
       <Section title="Template">
         <p className="muted small">Save these blocks — positions, layers and feedback — to reuse on other screens.</p>
         <button onClick={async () => {
