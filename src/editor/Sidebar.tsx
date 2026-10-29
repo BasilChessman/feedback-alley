@@ -4,6 +4,7 @@ import type { Screen } from '../types';
 import { selectBlocks, selectLayers, useEditor } from './EditorCtx';
 import { templateDrag, TEMPLATE_MIME, useActions } from './actions';
 import { Section } from './fields';
+import { askText } from './askText';
 
 export function Sidebar({ onOpenScreen }: { onOpenScreen: (id: string) => void }) {
   return (
@@ -100,7 +101,7 @@ function BlocksPanel() {
 }
 
 function TemplatesPanel() {
-  const { project, sel, mutate } = useEditor();
+  const { project, screen, sel, mutate } = useEditor();
   const { insertTemplate, saveTemplate } = useActions();
   const [renaming, setRenaming] = useState<string | null>(null);
   return (
@@ -108,8 +109,8 @@ function TemplatesPanel() {
       title="Templates"
       actions={
         sel.blocks.length > 0 && !sel.focus ? (
-          <button className="small" title="Save the selected blocks as a reusable template" onClick={() => {
-            const name = prompt('Template name', sel.blocks.length > 1 ? 'Block group' : 'Block');
+          <button className="small" title="Save the selected blocks as a reusable template" onClick={async () => {
+            const name = await askText({ title: 'Save as template', label: 'Template name', value: sel.blocks.length > 1 ? 'Block group' : screen.blocks.find((b) => b.id === sel.blocks[0])?.name ?? 'Block', okLabel: 'Save' });
             if (name) saveTemplate(name);
           }}>+ Save selection</button>
         ) : undefined

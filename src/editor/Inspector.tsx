@@ -10,6 +10,7 @@ import { useActions, type AlignMode } from './actions';
 import { RulesEditor, type RuleProp } from './RulesEditor';
 import { RichTextField } from './RichTextField';
 import { BarProps } from './BarProps';
+import { askText } from './askText';
 import { nearestAnchor } from '../lib/fixed';
 import { HEADER_MAX, HEADER_MIN, newHeader, supportsHeader } from '../lib/header';
 import { ColorField, ImageField, NumberField, Row, Section, Segmented, Select, Slider, TextField, Toggle } from './fields';
@@ -392,8 +393,8 @@ function BlockInspector({ block }: { block: Block }) {
         <GeometryFields rect={block} unit="screen" frame={screenPx(screen)} onChange={(r) => set((b) => Object.assign(b, r))} />
         <AlignButtons title="screen" />
         <span className="btn-row">
-          <button onClick={() => {
-            const name = prompt('Template name', block.name);
+          <button onClick={async () => {
+            const name = await askText({ title: 'Save as template', label: 'Template name', value: block.name, okLabel: 'Save' });
             if (name) actions.saveTemplate(name);
           }}>Save as template</button>
         </span>
@@ -556,8 +557,8 @@ function MultiInspector() {
       </Section>
       <Section title="Template">
         <p className="muted small">Save these blocks — positions, layers and feedback — to reuse on other screens.</p>
-        <button onClick={() => {
-          const name = prompt('Template name', 'Block group');
+        <button onClick={async () => {
+          const name = await askText({ title: 'Save as template', label: 'Template name', value: 'Block group', okLabel: 'Save' });
           if (name) actions.saveTemplate(name);
         }}>Save as template</button>
       </Section>

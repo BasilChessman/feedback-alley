@@ -457,3 +457,8 @@ select.fmt-size:hover { border-color: var(--line); }
 .anchor-grid button.on::after { background: white; width: 8px; height: 8px; }
 .btn-row button.on { background: var(--accent-2); color: white; border-color: transparent; }
 .topbar .segmented.units button { min-width: 30px; }
+.ask-backdrop { z-index: 1100; }
+.ask-dialog { width: min(380px, 92vw); }
+.ask-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.ask-body input { width: 100%; }
+.ask-actions { justify-content: flex-end; margin-top: 4px; }
