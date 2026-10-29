@@ -650,12 +650,12 @@ function LayerInspector({ block, path, layer, inside = false }: { block: Block; 
         <Row label="Hidden" hint="Hidden unless a rule shows it"><Toggle value={layer.hidden} onChange={(v) => set((l) => (l.hidden = v))} /></Row>
       </Section>
 
+      {supportsHeader(layer) && <HeaderProps layer={layer} set={set} />}
       {layer.type === 'group' && <GroupProps block={block} path={path} layer={layer} set={set} inside={inside} />}
       {layer.type === 'text' && <TextProps layer={layer} set={set} />}
       {layer.type === 'shape' && <ShapeProps layer={layer} set={set} />}
       {layer.type === 'image' && <ImageProps layer={layer} set={set} />}
       {layer.type === 'bar' && <BarProps layer={layer} set={(fn) => set<BarLayer>(fn)} />}
-      {supportsHeader(layer) && <HeaderProps layer={layer} set={set} />}
 
       <Section title="Background & corners" defaultOpen={!!(layer.bgColor || layer.bgImage || layer.radius)}>
         <Row label="Color" hint="Leave empty for none">
