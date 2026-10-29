@@ -313,14 +313,14 @@
   <tr><td>Layers</td><td>The block’s layers. Click one to edit it, and add new ones with <b>+ Text</b>, <b>+ Shape</b>, <b>+ Image</b>, <b>+ Bar</b> and <b>+ Group</b>.</td></tr>
   <tr><td>Style</td><td>Fill color, border width and color, corner radius, opacity, <b>Clip layers</b> (hide anything that sticks out of the block), and <b>Hidden</b>.</td></tr>
   <tr><td>Feedback rules</td><td>Change the block’s look when Companion values change. See <a href="#rules">Feedback rules</a>.</td></tr>
-  <tr><td>Button press</td><td>Turn on <b>Press a Companion button</b> and enter its location as <code>page/row/column</code> (for example <code>1/0/2</code>). Clicking or tapping the block on a display then presses that button, which makes a display work as a simple touch panel.</td></tr>
+  <tr><td>Button press</td><td>What clicking or tapping the block on a display does. Turn on <b>Press a Companion button</b> and enter its location as <code>page/row/column</code> (for example <code>1/0/2</code>) to press that button, which makes a display work as a simple touch panel. Use <b>Go to screen</b> to switch the display to another screen. See <a href="#interactive">Interactive layouts</a>.</td></tr>
 </table>
 <p>
   The first time you select a block or layer, all its sections are collapsed, so you only see what you open. Click a section’s title
   to open or close it. Each block and layer remembers which sections you left open while the app is running.
 </p>
 <p>
-  In the Blocks list, <b>ƒ</b> marks a block with feedback rules and <b>⏎</b> one that presses a button. The dot on the right
+  In the Blocks list, <b>ƒ</b> marks a block with feedback rules, <b>⏎</b> one that presses a button and <b>→</b> one that goes to another screen. The dot on the right
   shows and hides the block.
 </p>
 <div class="tip"><p><b>Hidden</b> means hidden unless a rule shows it. That’s how you make things that appear only when needed, like an ON AIR sign. Hidden items still show faintly in the editor so you can work on them.</p></div>
@@ -669,8 +669,31 @@
   <li><b>Double-click</b> to go full screen (and again to leave).</li>
   <li>The mouse pointer hides when it isn’t moving.</li>
   <li>Edits you make in the editor appear on displays straight away; there’s no need to reload.</li>
-  <li>Blocks with a <b>button press</b> press their Companion button when clicked or tapped.</li>
+  <li>Blocks with a <b>button press</b> press their Companion button when clicked or tapped, and blocks with <b>Go to screen</b> switch to another screen.</li>
 </ul>
+<h3 id="interactive">Interactive layouts</h3>
+<div class="beside">
+<div>
+<p>
+  Blocks can take a display from one screen to another, so you can build a touch panel with a home screen and pages behind it,
+  for example <i>Home → Cameras → Audio</i>. Select a block, open <b>Button press</b> and choose where <b>Go to screen</b> goes:
+</p>
+<ul>
+  <li><b>A screen</b> by name.</li>
+  <li><b>← Previous screen</b> goes back the way you came, one screen at a time, like a Back button.</li>
+  <li><b>⌂ Start screen</b> goes to the screen the display was opened with (or the one on its port), like a Home button.</li>
+</ul>
+<p>
+  Only the display that was tapped changes; other displays showing the same screens stay where they are. A block can press a
+  Companion button and go to a screen with the same tap. Screens can have different shapes, and the display adjusts to each.
+  Reloading the display goes back to its start screen.
+</p>
+</div>
+<figure>
+  <img src="img/go-to-screen.png" alt="The Button press section with Go to screen set to Cameras">
+  <figcaption>A block that opens the Cameras screen.</figcaption>
+</figure>
+</div>
 <p class="warn">Displays need Feedback Alley to be running. On macOS it keeps running when you close the window; on Windows and Linux, leave the window open.</p>
 
 <!-- ===================================================================== -->

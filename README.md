@@ -74,7 +74,7 @@ To build locally: `npm run dist:mac`, `npm run dist:win` or `npm run dist:linux`
 | | |
 |---|---|
 | **Screen** | A layout with a fixed aspect ratio (16:9, 4:3, 32:9, 9:16, custom…). It is resolution-independent: the same 16:9 screen fills 1280×720, 1920×1080 or 3840×2160 exactly. |
-| **Block** | A positioned box on the screen (fill, border, radius, opacity, feedback rules, optional Companion button press). |
+| **Block** | A positioned box on the screen (fill, border, radius, opacity, feedback rules, optional Companion button press or screen change on click). |
 | **Layer** | Content inside a block: **Text**, **Shape**, **Image** or **Bar/meter**. Layers are positioned in % of their block, so they resize with it, or set **Sizing → Fixed** to keep a layer's size, pinned to an anchor point. Any layer except a group can have a **header**: a strip on one side with its own fill and text, resized by dragging its divider. Text can auto-fit its layer. Every layer can have its own background color and/or image and rounded corners. |
 | **Group** | A layer that holds other layers: a block within a block. Its children are positioned in % of the group, so they follow it, and groups can be nested. A group has its own background, border, corners, clipping and feedback rules (e.g. hide or color a whole cluster at once). |
 | **Template** | One or more blocks saved with their layers and rules. **Drag** a template onto the screen to place it (it snaps like a move), or click **Insert** to put it where it was saved. When the aspect ratio differs, blocks keep their real proportions. |
@@ -99,7 +99,7 @@ To build locally: `npm run dist:mac`, `npm run dist:win` or `npm run dist:linux`
   - **Countdown / elapsed:** set *Shows* to *Countdown (time left)* and give it the time-left variable and the duration (a variable, or typed like `2:20`). The bar fills from empty to full as the time counts down to 0. *Time elapsed* does the same for a clock that counts up. Times can be `ss`, `m:ss`, `h:mm:ss`, `hh:mm:ss:ff` (frames ignored) or a bare number of seconds or milliseconds. *Smooth* keeps the bar gliding between once-a-second updates; if playback pauses it stops within one update.
   - **Reverse** starts the bar full and empties it instead.
   - **Color thresholds:** e.g. at 80 turn amber, at 90 turn red. Measure them in the bar's own values (numbers, or time left/elapsed such as `0:30`) or in % of the bar. The furthest threshold reached wins; a feedback rule that sets the fill overrides thresholds.
-- Clicking a block on a display can press a Companion button (`page/row/column`).
+- Clicking a block on a display can press a Companion button (`page/row/column`) and/or **go to another screen** (a named screen, the previous screen, or the display's start screen), for interactive, multi-page layouts. Only the display that was clicked changes.
 - Color fade transitions and poll rate are set in Settings.
 
 ## Editor shortcuts

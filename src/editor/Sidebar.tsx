@@ -83,6 +83,7 @@ function BlocksPanel() {
             <span className="item-name">{b.name}</span>
             {(b.rules.length > 0 || b.layers.some((l) => l.rules.length)) && <span className="badge" title="Has feedback rules">ƒ</span>}
             {b.press && <span className="badge" title="Presses a Companion button">⏎</span>}
+            {b.goTo && <span className="badge" title="Goes to another screen when clicked">→</span>}
             <button
               className={`icon eye${b.hidden ? ' off' : ''}`}
               title={b.hidden ? 'Hidden unless a rule shows it' : 'Visible'}

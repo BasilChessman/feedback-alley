@@ -41,7 +41,7 @@ export function App() {
   if (outputScreen === undefined) return <div className="display-msg" />;
   // An output port shows its screen at "/", with nothing after the port.
   if (outputScreen) return <Display key={outputScreen} screenId={outputScreen} />;
-  if (section === 'display') return id ? <Display screenId={id} /> : <Loaded>{(p) => <ScreenPicker project={p} />}</Loaded>;
+  if (section === 'display') return id ? <Display key={id} screenId={id} /> : <Loaded>{(p) => <ScreenPicker project={p} />}</Loaded>;
   return (
     <Loaded>
       {(p) => (

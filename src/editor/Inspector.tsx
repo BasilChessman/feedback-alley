@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { GO_BACK, GO_HOME } from '../types';
 import type { Anchor, BarLayer, Block, FlashPart, GroupLayer, ImageLayer, Layer, LayerHeader, Rect, Screen, ShapeLayer, TextLayer, TextStyle } from '../types';
 import { ASPECT_PRESETS, RESOLUTIONS } from '../lib/defaults';
 import { containerAt, containerRect, countLayers, groupAt } from '../lib/tree';
@@ -458,10 +459,26 @@ function BlockInspector({ block }: { block: Block }) {
             </Row>
           </>
         )}
+        <Row label="Go to screen" hint={block.goTo ? 'Switches only the display that was clicked' : undefined}>
+          <Select value={block.goTo ?? ''} onChange={(v) => set((b) => (b.goTo = v || undefined))} options={goToOptions(project.screens, screen.id, block.goTo)} />
+        </Row>
+        {block.goTo === GO_HOME && <p className="muted small">The start screen is the one the display was opened with.</p>}
       </Section>
     </div>
     </SectionScope.Provider>
   );
+}
+
+// Where a block's click can take a display: any other screen, back, or home.
+function goToOptions(screens: Screen[], current: string, value?: string) {
+  const options = [
+    { value: '', label: 'Stay on this screen' },
+    ...screens.filter((s) => s.id !== current).map((s) => ({ value: s.id, label: s.name })),
+    { value: GO_BACK, label: '← Previous screen' },
+    { value: GO_HOME, label: '⌂ Start screen' },
+  ];
+  if (value && !options.some((o) => o.value === value)) options.push({ value, label: value === current ? 'This screen' : '(deleted screen)' });
+  return options;
 }
 
 const LAYER_ICONS: Record<Layer['type'], string> = { text: 'T', shape: '■', image: '🖼', bar: '▭', group: '▣' };
