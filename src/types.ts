@@ -42,6 +42,11 @@ export interface StyleOverride {
   visible?: boolean;
   flash?: boolean;
   text?: string;
+  // a layer's header (see LayerHeader)
+  headerVisible?: boolean;
+  headerFill?: string;
+  headerTextColor?: string;
+  headerText?: string;
 }
 
 export interface FeedbackRule {

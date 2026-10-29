@@ -671,7 +671,7 @@ function LayerInspector({ block, path, layer, inside = false }: { block: Block; 
       </Section>
 
       <Section title="Feedback rules" defaultOpen>
-        <RulesEditor rules={layer.rules} onChange={(r) => set((l) => (l.rules = r))} props={ruleProps[layer.type]} />
+        <RulesEditor rules={layer.rules} onChange={(r) => set((l) => (l.rules = r))} props={supportsHeader(layer) && layer.header ? [...ruleProps[layer.type], ...HEADER_RULE_PROPS] : ruleProps[layer.type]} />
       </Section>
     </div>
   );
@@ -758,6 +758,8 @@ function TextStyleFields({ t, set: s, sizeOf = 'layer' }: { t: TextStyle; set: (
   );
 }
 
+const HEADER_RULE_PROPS: RuleProp[] = ['headerVisible', 'headerFill', 'headerTextColor', 'headerText'];
+
 const HEADER_SIDES: { value: LayerHeader['side']; label: string }[] = [
   { value: 'top', label: 'Top' }, { value: 'bottom', label: 'Bottom' },
   { value: 'left', label: 'Left' }, { value: 'right', label: 'Right' },
@@ -791,6 +793,11 @@ function HeaderProps({ layer, set }: { layer: Layer; set: Setter }) {
           <div className="subhead">Header text</div>
           <TextStyleFields t={h} set={(fn) => sh(fn)} sizeOf="header" />
         </>
+      )}
+      {h && (
+        <p className="muted small">
+          Use <b>Feedback rules</b> below to change the header’s fill, text or text color, or to show or hide it, when values change.
+        </p>
       )}
     </Section>
   );

@@ -16,6 +16,10 @@ const PROP_LABELS: Record<RuleProp, string> = {
   visible: 'Visibility',
   flash: 'Flash',
   text: 'Replace text',
+  headerVisible: 'Header visibility',
+  headerFill: 'Header fill',
+  headerTextColor: 'Header text color',
+  headerText: 'Replace header text',
 };
 
 const PROP_DEFAULTS: Required<StyleOverride> = {
@@ -27,6 +31,10 @@ const PROP_DEFAULTS: Required<StyleOverride> = {
   visible: false,
   flash: true,
   text: '',
+  headerVisible: true,
+  headerFill: '#d83a3a',
+  headerTextColor: '#ffffff',
+  headerText: '',
 };
 
 // Conditional feedback: "when <conditions> then set <properties>".
@@ -129,6 +137,8 @@ function ConditionRow({ c, onChange, onRemove }: { c: Condition; onChange: (c: C
 function PropEditor({ prop, value, onChange }: { prop: RuleProp; value: unknown; onChange: (v: unknown) => void }) {
   switch (prop) {
     case 'fill':
+    case 'headerFill':
+    case 'headerTextColor':
     case 'textColor':
     case 'borderColor':
     case 'background':
@@ -136,12 +146,14 @@ function PropEditor({ prop, value, onChange }: { prop: RuleProp; value: unknown;
     case 'opacity':
       return <Slider value={Number(value)} onChange={onChange} />;
     case 'visible':
+    case 'headerVisible':
       return (
         <Select value={value ? 'show' : 'hide'} onChange={(v) => onChange(v === 'show')} options={[{ value: 'hide', label: 'Hide' }, { value: 'show', label: 'Show' }]} />
       );
     case 'flash':
       return <span className="muted small">Blinks while matching</span>;
     case 'text':
+    case 'headerText':
       return <RichTextField value={String(value)} onChange={onChange} placeholder="Text (variables and formatting allowed)" />;
   }
 }
