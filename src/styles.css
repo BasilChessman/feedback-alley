@@ -422,8 +422,13 @@ select.fmt-size:hover { border-color: var(--line); }
   display: flex; align-items: center; justify-content: center;
   border: 1px dashed #ffffff55; color: #ffffff88; font-size: 11px;
 }
-.flash { animation: flash 1s steps(1, end) infinite; }
+/* Flash rules (see lib/flash.ts): the first half of each cycle is normal, the second flashed */
 @keyframes flash { 50% { opacity: 0.15; } }
+@keyframes flash-hide { 50% { opacity: 0; } }
+@keyframes flash-bg { 50% { background-color: var(--flash-color); } }
+@keyframes flash-border { 50% { border-color: var(--flash-color); } }
+@keyframes flash-color { 50% { color: var(--flash-color); } }
+.flash-text .text-inner, .flash-text .text-inner span { animation: flash-color var(--flash-speed) steps(1, end) infinite; }
 
 /* ---------- display ---------- */
 .display { position: fixed; inset: 0; background: #000; }
@@ -478,3 +483,8 @@ input.bad { border-color: #e5484d; }
 .vars-status.bad { color: #e5484d; }
 .vars-status.warn { color: #f5a524; }
 .vars-actions { margin-top: 8px; }
+
+/* Flash options in a feedback rule */
+.flash-editor { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 4px 0 2px; }
+.flash-parts { flex-wrap: wrap; }
+.flash-parts button { padding: 3px 9px; }

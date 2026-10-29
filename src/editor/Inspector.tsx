@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import type { Anchor, BarLayer, Block, GroupLayer, ImageLayer, Layer, LayerHeader, Rect, Screen, ShapeLayer, TextLayer, TextStyle } from '../types';
+import type { Anchor, BarLayer, Block, FlashPart, GroupLayer, ImageLayer, Layer, LayerHeader, Rect, Screen, ShapeLayer, TextLayer, TextStyle } from '../types';
 import { ASPECT_PRESETS, RESOLUTIONS } from '../lib/defaults';
 import { containerAt, containerRect, countLayers, groupAt } from '../lib/tree';
 import { rectPx, scaleStrokes, screenPx } from '../lib/pixels';
@@ -14,7 +14,7 @@ import { VariablesPanel } from './VariablesPanel';
 import { askText } from './askText';
 import { nearestAnchor } from '../lib/fixed';
 import { HEADER_MAX, HEADER_MIN, newHeader, supportsHeader } from '../lib/header';
-import { ColorField, ImageField, NumberField, Row, Section, Segmented, Select, Slider, TextField, Toggle } from './fields';
+import { ColorField, ImageField, SectionScope, NumberField, Row, Section, Segmented, Select, Slider, TextField, Toggle } from './fields';
 
 export const FONT_SUGGESTIONS = [
   'Inter', 'Helvetica Neue', 'Arial', 'Roboto', 'Open Sans', 'Montserrat', 'Barlow', 'Barlow Condensed',
@@ -26,16 +26,16 @@ export function Inspector() {
   const focus = sel.focus ? screen.blocks.find((b) => b.id === sel.focus) : undefined;
   if (focus) {
     const picked = containerAt(focus, sel.path)?.layers.filter((l) => sel.layers.includes(l.id)) ?? [];
-    if (picked.length === 1) return <LayerInspector block={focus} path={sel.path} layer={picked[0]} />;
+    if (picked.length === 1) return <LayerInspector key={picked[0].id} block={focus} path={sel.path} layer={picked[0]} />;
     if (picked.length > 1) return <MultiLayerInspector block={focus} count={picked.length} />;
     // inside a group with nothing selected: show the group itself
     const group = groupAt(focus, sel.path);
-    if (group) return <LayerInspector block={focus} path={sel.path.slice(0, -1)} layer={group} inside />;
-    return <BlockInspector block={focus} />;
+    if (group) return <LayerInspector key={group.id} block={focus} path={sel.path.slice(0, -1)} layer={group} inside />;
+    return <BlockInspector key={focus.id} block={focus} />;
   }
   if (sel.blocks.length === 1) {
     const b = screen.blocks.find((b) => b.id === sel.blocks[0]);
-    if (b) return <BlockInspector block={b} />;
+    if (b) return <BlockInspector key={b.id} block={b} />;
   }
   if (sel.blocks.length > 1) return <MultiInspector />;
   return <ScreenInspector />;
@@ -378,7 +378,9 @@ function BlockInspector({ block }: { block: Block }) {
   const set = (fn: (b: Block) => void) => updateBlock(block.id, fn);
   const editingLayers = sel.focus === block.id;
 
+  // each block's sections start collapsed, then stay as you leave them
   return (
+    <SectionScope.Provider value={block.id}>
     <div className="inspector mode-block">
       <ContextBar
         kind="block"
@@ -430,11 +432,11 @@ function BlockInspector({ block }: { block: Block }) {
         <p className="muted small">Border and radius are in screen pixels and scale with the output.</p>
       </Section>
 
-      <Section title="Feedback rules" defaultOpen={block.rules.length > 0}>
-        <RulesEditor rules={block.rules} onChange={(r) => set((b) => (b.rules = r))} props={['fill', 'borderColor', 'opacity', 'visible', 'flash']} />
+      <Section title="Feedback rules">
+        <RulesEditor rules={block.rules} onChange={(r) => set((b) => (b.rules = r))} props={['fill', 'borderColor', 'opacity', 'visible', 'flash']} flashParts={['all', 'fill', 'border', 'text']} />
       </Section>
 
-      <Section title="Button press" defaultOpen={!!block.press}>
+      <Section title="Button press">
         <Row label="On click">
           <Toggle
             value={!!block.press}
@@ -458,6 +460,7 @@ function BlockInspector({ block }: { block: Block }) {
         )}
       </Section>
     </div>
+    </SectionScope.Provider>
   );
 }
 
@@ -620,12 +623,22 @@ function LayerInspector({ block, path, layer, inside = false }: { block: Block; 
     bar: ['fill', 'background', 'opacity', 'visible', 'flash'],
     group: ['background', 'borderColor', 'opacity', 'visible', 'flash'],
   };
+  const flashParts: Record<Layer['type'], FlashPart[]> = {
+    text: ['all', 'text', 'background'],
+    shape: ['all', 'fill', 'border', 'background'],
+    image: ['all', 'background'],
+    bar: ['all', 'fill', 'background'],
+    group: ['all', 'background', 'border', 'text'],
+  };
+  const hasHeader = supportsHeader(layer) && !!layer.header;
   const parentGroup = groupAt(block, path);
   const parentName = parentGroup?.name ?? block.name;
   const parentKind = parentGroup ? 'group' : 'block';
   const isGroup = layer.type === 'group';
 
+  // each layer's sections start collapsed, then stay as you leave them
   return (
+    <SectionScope.Provider value={layer.id}>
     <div className={`inspector mode-layer${isGroup ? ' is-group' : ''}`}>
       <ContextBar
         kind="layer"
@@ -677,9 +690,12 @@ function LayerInspector({ block, path, layer, inside = false }: { block: Block; 
       </Section>
 
       <Section title="Feedback rules" defaultOpen>
-        <RulesEditor rules={layer.rules} onChange={(r) => set((l) => (l.rules = r))} props={supportsHeader(layer) && layer.header ? [...ruleProps[layer.type], ...HEADER_RULE_PROPS] : ruleProps[layer.type]} />
+        <RulesEditor rules={layer.rules} onChange={(r) => set((l) => (l.rules = r))} props={hasHeader ? [...ruleProps[layer.type], ...HEADER_RULE_PROPS] : ruleProps[layer.type]}
+          flashParts={hasHeader ? [...flashParts[layer.type], 'header'] : flashParts[layer.type]}
+        />
       </Section>
     </div>
+    </SectionScope.Provider>
   );
 }
 

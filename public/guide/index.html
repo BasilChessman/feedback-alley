@@ -309,11 +309,16 @@
 <table>
   <tr><th>Section</th><th>Settings</th></tr>
   <tr><td>Position &amp; size</td><td>Exact position and size, alignment, stacking order, and <b>Save as template</b>.</td></tr>
+  <tr><td>Find &amp; Replace</td><td>Every variable and piece of text in the block, ready to change or copy for another device. See <a href="#find-replace">Find &amp; Replace</a>.</td></tr>
   <tr><td>Layers</td><td>The block’s layers. Click one to edit it, and add new ones with <b>+ Text</b>, <b>+ Shape</b>, <b>+ Image</b>, <b>+ Bar</b> and <b>+ Group</b>.</td></tr>
   <tr><td>Style</td><td>Fill color, border width and color, corner radius, opacity, <b>Clip layers</b> (hide anything that sticks out of the block), and <b>Hidden</b>.</td></tr>
   <tr><td>Feedback rules</td><td>Change the block’s look when Companion values change. See <a href="#rules">Feedback rules</a>.</td></tr>
   <tr><td>Button press</td><td>Turn on <b>Press a Companion button</b> and enter its location as <code>page/row/column</code> (for example <code>1/0/2</code>). Clicking or tapping the block on a display then presses that button, which makes a display work as a simple touch panel.</td></tr>
 </table>
+<p>
+  The first time you select a block or layer, all its sections are collapsed, so you only see what you open. Click a section’s title
+  to open or close it. Each block and layer remembers which sections you left open while the app is running.
+</p>
 <p>
   In the Blocks list, <b>ƒ</b> marks a block with feedback rules and <b>⏎</b> one that presses a button. The dot on the right
   shows and hides the block.
@@ -542,6 +547,24 @@
   its text (with formatting). Layers with a header can also change the header’s fill, text color, text and visibility. What’s available
   depends on the item.
 </p>
+<h3 id="flash">Flash</h3>
+<div class="beside">
+<div>
+<p>Tick <b>Flash</b> to make the item flash while the rule matches. Then choose:</p>
+<ul>
+  <li><b>What flashes.</b> <b>Whole</b> fades the whole item in and out. Or pick one or more parts: <b>Fill</b>, <b>Border</b>,
+    <b>Text</b>, <b>Background</b> or <b>Header</b>, depending on the item. On a block or group, <b>Text</b> flashes all the text inside it.</li>
+  <li><b>How.</b> <b>Blink</b> makes the parts disappear and come back. <b>Alternate color</b> switches them to another color and back,
+    for example a border that flashes red.</li>
+  <li><b>Speed:</b> <b>Slow</b>, <b>Normal</b> or <b>Fast</b>.</li>
+</ul>
+<p>Everything a rule flashes flashes together, in step.</p>
+</div>
+<figure>
+  <img src="img/flash-rule.png" alt="A rule set to flash a text layer's text and header, alternating with magenta at normal speed">
+  <figcaption>Flashing a layer’s text and header, alternating with magenta.</figcaption>
+</figure>
+</div>
 <div class="note">
   <p><b>Several rules?</b> They’re checked from top to bottom, and for each property the first rule that matches wins. Use the arrows to reorder them.</p>
 </div>

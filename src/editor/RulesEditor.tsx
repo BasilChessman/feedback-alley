@@ -1,8 +1,9 @@
 import { useContext } from 'react';
-import type { Condition, FeedbackRule, StyleOverride } from '../types';
+import type { Condition, FeedbackRule, FlashPart, StyleOverride } from '../types';
 import { OPERATORS, ruleMatches } from '../lib/rules';
 import { newRule } from '../lib/defaults';
-import { ColorField, Select, Slider, TextField, ValuesCtx } from './fields';
+import { FLASH_PART_LABELS, FLASH_SPEEDS, flashSpec, newFlash } from '../lib/flash';
+import { ColorField, Segmented, Select, Slider, TextField, ValuesCtx } from './fields';
 import { RichTextField } from './RichTextField';
 
 export type RuleProp = keyof StyleOverride;
@@ -29,7 +30,7 @@ const PROP_DEFAULTS: Required<StyleOverride> = {
   background: '#d83a3a',
   opacity: 50,
   visible: false,
-  flash: true,
+  flash: newFlash(),
   text: '',
   headerVisible: true,
   headerFill: '#d83a3a',
@@ -38,7 +39,10 @@ const PROP_DEFAULTS: Required<StyleOverride> = {
 };
 
 // Conditional feedback: "when <conditions> then set <properties>".
-export function RulesEditor({ rules, onChange, props }: { rules: FeedbackRule[]; onChange: (r: FeedbackRule[]) => void; props: RuleProp[] }) {
+// flashParts: the parts of this item a Flash rule can flash.
+export function RulesEditor({ rules, onChange, props, flashParts = ['all'] }: {
+  rules: FeedbackRule[]; onChange: (r: FeedbackRule[]) => void; props: RuleProp[]; flashParts?: FlashPart[];
+}) {
   const values = useContext(ValuesCtx);
   const set = (i: number, fn: (r: FeedbackRule) => void) => {
     const next = structuredClone(rules);
@@ -107,7 +111,9 @@ export function RulesEditor({ rules, onChange, props }: { rules: FeedbackRule[];
                     />
                     <span>{PROP_LABELS[p]}</span>
                   </label>
-                  {on && <PropEditor prop={p} value={rule.set[p]} onChange={(v) => set(i, (r) => ((r.set as Record<string, unknown>)[p] = v))} />}
+                  {on && (p === 'flash'
+                    ? <FlashEditor value={rule.set.flash} parts={flashParts} onChange={(v) => set(i, (r) => (r.set.flash = v))} />
+                    : <PropEditor prop={p} value={rule.set[p]} onChange={(v) => set(i, (r) => ((r.set as Record<string, unknown>)[p] = v))} />)}
                 </div>
               );
             })}
@@ -150,10 +156,47 @@ function PropEditor({ prop, value, onChange }: { prop: RuleProp; value: unknown;
       return (
         <Select value={value ? 'show' : 'hide'} onChange={(v) => onChange(v === 'show')} options={[{ value: 'hide', label: 'Hide' }, { value: 'show', label: 'Show' }]} />
       );
-    case 'flash':
-      return <span className="muted small">Blinks while matching</span>;
     case 'text':
     case 'headerText':
       return <RichTextField value={String(value)} onChange={onChange} placeholder="Text (variables and formatting allowed)" />;
   }
+}
+
+// What flashes (one or more parts, or the whole item), blink or alternate
+// with a color, and how fast.
+function FlashEditor({ value, parts, onChange }: { value: StyleOverride['flash']; parts: FlashPart[]; onChange: (v: StyleOverride['flash']) => void }) {
+  const f = flashSpec(value) ?? { ...newFlash(), parts: [] };
+  const toggle = (p: FlashPart) => {
+    const has = f.parts.includes(p);
+    // the whole item and its parts don't mix
+    const next = p === 'all' ? (has ? [] : ['all' as const]) : has ? f.parts.filter((x) => x !== p) : [...f.parts.filter((x) => x !== 'all'), p];
+    onChange({ ...f, parts: next });
+  };
+  const onlyWhole = f.parts.length === 1 && f.parts[0] === 'all';
+  return (
+    <div className="flash-editor">
+      <span className="btn-row tight flash-parts">
+        {parts.map((p) => (
+          <button key={p} type="button" className={f.parts.includes(p) ? 'on' : ''} onClick={() => toggle(p)}>{FLASH_PART_LABELS[p]}</button>
+        ))}
+      </span>
+      {f.parts.length === 0 && <span className="muted small">Pick what flashes.</span>}
+      {f.parts.length > 0 && !onlyWhole && (
+        <>
+          <Segmented
+            value={f.color ? 'color' : 'blink'}
+            onChange={(m) => onChange({ ...f, color: m === 'color' ? '#ffcc00' : '' })}
+            options={[{ value: 'blink', label: 'Blink', title: 'Disappears and comes back' }, { value: 'color', label: 'Alternate color', title: 'Switches to another color and back' }]}
+          />
+          {f.color && <ColorField value={f.color} onChange={(c) => onChange({ ...f, color: c })} />}
+        </>
+      )}
+      {onlyWhole && <span className="muted small">The whole item fades in and out.</span>}
+      <Segmented
+        value={String(f.speed)}
+        onChange={(v) => onChange({ ...f, speed: Number(v) })}
+        options={FLASH_SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
+      />
+    </div>
+  );
 }

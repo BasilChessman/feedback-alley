@@ -19,7 +19,8 @@ interface Ref {
 // replace across everything, or edit one by one; then apply in place or make a
 // copy with the changes. Variables are renamed wherever they're used: text,
 // images, bars, headers and feedback rules.
-export function VariablesPanel({ blocks }: { blocks: Block[] }) {
+// remember: key for keeping the section open or closed (see Section).
+export function VariablesPanel({ blocks, remember }: { blocks: Block[]; remember?: string }) {
   const { updateScreen } = useEditor();
   const actions = useActions();
   const values = useContext(ValuesCtx);
@@ -118,7 +119,7 @@ export function VariablesPanel({ blocks }: { blocks: Block[] }) {
 
   const many = blocks.length > 1;
   return (
-    <Section title="Find & Replace" defaultOpen={false} remember="variables">
+    <Section title="Find & Replace" defaultOpen={false} remember={remember}>
       <p className="muted small">
         Edit the copies below, then apply them here or make a duplicate with the changes. Variables are renamed everywhere
         they’re used, including images, bars and feedback rules.
