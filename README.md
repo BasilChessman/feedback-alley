@@ -84,6 +84,7 @@ To build locally: `npm run dist:mac`, `npm run dist:win` or `npm run dist:linux`
 ## Feedback (from Companion Dashboard, extended)
 
 - Variables in any text, color or image field: `$(internal:time_hms)`, `[1]$(atem:pgm)` for other connections, `\$(…)` for literal output (no markdown).
+- **Tidy inspector:** a block's or layer's sections start collapsed the first time you select it, and each remembers which sections you opened.
 - **Find & Replace** (block inspector, above Layers): every variable and piece of text a block uses, each with an editable copy. Rename a connection once (`device1` → `device2`), find and replace across all of them, or edit one by one, with a live check of each new name; then **Duplicate with changes** or **Apply**. Works on several blocks at once.
 - Text formatting for any selected words or variables, using the toolbar above the text box (⌘B / ⌘I / ⌘U):
   `**bold**`, `_italic_` (or `*italic*`), `++underline++`, `~~strike~~`, `{color:#f00}…{/color}`,
@@ -92,7 +93,7 @@ To build locally: `npm run dist:mac`, `npm run dist:win` or `npm run dist:linux`
 - Line spacing (× text size) and paragraph spacing per text layer. Enter (or `\n`) is a new line; a blank line
   starts a new paragraph.
 - Colors can come from variables, including Companion's decimal color integers.
-- **Rules** on screens, blocks and layers: *when* one or more conditions match (`= ≠ > ≥ < ≤ contains`, `is empty` …, compared against a literal or another variable, all/any), *then* set fill, text color, border color, layer background color, opacity, visibility, flash or replacement text, and for layers with a header, the header's fill, text color, text and visibility. Rules are checked top to bottom, and the first match wins per property. A green dot shows which rules match right now.
+- **Rules** on screens, blocks and layers: *when* one or more conditions match (`= ≠ > ≥ < ≤ contains`, `is empty` …, compared against a literal or another variable, all/any), *then* set fill, text color, border color, layer background color, opacity, visibility, flash (the whole item, or its fill, border, text, background or header; blinking or alternating with a color; slow, normal or fast) or replacement text, and for layers with a header, the header's fill, text color, text and visibility. Rules are checked top to bottom, and the first match wins per property. A green dot shows which rules match right now.
 - "Hidden" items stay hidden unless a rule shows them, e.g. an ON AIR tag.
 - Bar layers turn a numeric variable (min–max) into a progress bar or meter in any direction.
   - **Countdown / elapsed:** set *Shows* to *Countdown (time left)* and give it the time-left variable and the duration (a variable, or typed like `2:20`). The bar fills from empty to full as the time counts down to 0. *Time elapsed* does the same for a clock that counts up. Times can be `ss`, `m:ss`, `h:mm:ss`, `hh:mm:ss:ff` (frames ignored) or a bare number of seconds or milliseconds. *Smooth* keeps the bar gliding between once-a-second updates; if playback pauses it stops within one update.

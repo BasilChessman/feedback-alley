@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import type { BarLayer, Block, GroupLayer, ImageLayer, Layer, Screen, Settings, ShapeLayer, TextLayer, TextStyle, Values } from '../types';
+import type { BarLayer, Block, FlashSpec, GroupLayer, ImageLayer, Layer, Screen, Settings, ShapeLayer, TextLayer, TextStyle, Values } from '../types';
 import { applyRules } from '../lib/rules';
+import { flashAnim, flashSpec, flashTextCls, flashVars } from '../lib/flash';
 import { screenPx } from '../lib/pixels';
 import { headerRects, supportsHeader } from '../lib/header';
 import { readBar, thresholdColor } from '../lib/bar';
@@ -80,9 +81,10 @@ function BlockView({ block }: { block: Block }) {
   const t = settings.transitionMs;
   const opacity = (o.opacity ?? block.opacity) / 100;
   const clickable = !editing && !!block.press?.location && !!onPress;
+  const f = flashSpec(o.flash);
   return (
     <div
-      className={`block${o.flash ? ' flash' : ''}${clickable ? ' clickable' : ''}${pressed ? ' pressed' : ''}`}
+      className={`block${flashTextCls(f)}${clickable ? ' clickable' : ''}${pressed ? ' pressed' : ''}`}
       style={{
         ...pct(block),
         background: color(o.fill ?? block.fill, values),
@@ -91,6 +93,8 @@ function BlockView({ block }: { block: Block }) {
         overflow: block.clip ? 'hidden' : 'visible',
         opacity: ruleHidden ? 0.2 : opacity,
         transition: t ? `background-color ${t}ms, border-color ${t}ms, opacity ${t}ms` : undefined,
+        ...flashVars(f),
+        ...flashAnim(f, ['all', 'fill', 'border']),
       }}
       onPointerDown={clickable ? () => { setPressed(true); onPress!(block); } : undefined}
       onPointerUp={clickable ? () => setPressed(false) : undefined}
@@ -112,6 +116,7 @@ export function LayerView({ layer }: { layer: Layer }) {
   if (hidden && !editing) return null;
   const bgImage = resolveText(layer.bgImage, values).trim();
   const t = settings.transitionMs;
+  const f = flashSpec(o.flash);
   const wrapper: CSSProperties = {
     ...pct(layer),
     opacity: hidden ? 0.15 : (o.opacity ?? layer.opacity) / 100,
@@ -123,8 +128,10 @@ export function LayerView({ layer }: { layer: Layer }) {
     borderRadius: layer.radius * scale,
     overflow: layer.radius > 0 || (layer.type === 'group' && layer.clip) ? 'hidden' : undefined,
     transition: t ? `background-color ${t}ms` : undefined,
+    ...flashVars(f),
+    ...flashAnim(f, ['all', 'background']),
   };
-  const props = { o, style: {}, cls: 'layer-content' };
+  const props = { o, f, style: {}, cls: 'layer-content' };
   const content = (
     <>
       {layer.type === 'text' && <TextLayerView layer={layer} {...props} />}
@@ -137,16 +144,16 @@ export function LayerView({ layer }: { layer: Layer }) {
   // a rule can show a header that's switched off, or hide one that's on
   const header = supportsHeader(layer) && layer.header && (o.headerVisible ?? layer.header.enabled) ? layer.header : null;
   if (!header) {
-    return <div className={`layer${o.flash ? ' flash' : ''}`} style={wrapper}>{content}</div>;
+    return <div className="layer" style={wrapper}>{content}</div>;
   }
   // header strip on one side; the layer's own content fills the rest
   const r = headerRects(header);
   return (
-    <div className={`layer${o.flash ? ' flash' : ''}`} style={wrapper}>
+    <div className="layer" style={wrapper}>
       <div className="layer-part" style={{ ...pct(r.content), containerType: 'size' }}>{content}</div>
       <div
         className="layer-part layer-header"
-        style={{ ...pct(r.header), backgroundColor: color(o.headerFill ?? header.fill, values), transition: t ? `background-color ${t}ms` : undefined }}
+        style={{ ...pct(r.header), backgroundColor: color(o.headerFill ?? header.fill, values), transition: t ? `background-color ${t}ms` : undefined, ...flashAnim(f, ['header']) }}
       >
         <TextView t={header} text={o.headerText} textColor={o.headerTextColor} cls="layer-content" />
       </div>
@@ -154,10 +161,10 @@ export function LayerView({ layer }: { layer: Layer }) {
   );
 }
 
-type LayerProps<L> = { layer: L; o: ReturnType<typeof applyRules>; style: CSSProperties; cls: string };
+type LayerProps<L> = { layer: L; o: ReturnType<typeof applyRules>; f: FlashSpec | null; style: CSSProperties; cls: string };
 
-function TextLayerView({ layer, o, style, cls }: LayerProps<TextLayer>) {
-  return <TextView t={layer} text={o.text} textColor={o.textColor} style={style} cls={cls} />;
+function TextLayerView({ layer, o, f, style, cls }: LayerProps<TextLayer>) {
+  return <TextView t={layer} text={o.text} textColor={o.textColor} style={style} cls={cls + flashTextCls(f)} />;
 }
 
 // Text with its settings: a text layer's content, or a layer's header.
@@ -238,11 +245,11 @@ function FitText({ html, maxPct, padding, style, deps }: { html: string; maxPct:
 }
 
 // Children are laid out in % of the group, exactly like layers in a block.
-function GroupLayerView({ layer, o, cls }: LayerProps<GroupLayer>) {
+function GroupLayerView({ layer, o, f, cls }: LayerProps<GroupLayer>) {
   const { values, scale, settings } = useRender();
   const t = settings.transitionMs;
   return (
-    <div className={cls}>
+    <div className={cls + flashTextCls(f)}>
       {layer.layers.map((l) => <LayerView key={l.id} layer={l} />)}
       {layer.borderWidth > 0 && (
         <div
@@ -251,6 +258,7 @@ function GroupLayerView({ layer, o, cls }: LayerProps<GroupLayer>) {
             border: `${layer.borderWidth * scale}px solid ${color(o.borderColor ?? layer.borderColor, values)}`,
             borderRadius: layer.radius * scale,
             transition: t ? `border-color ${t}ms` : undefined,
+            ...flashAnim(f, ['border']),
           }}
         />
       )}
@@ -258,7 +266,7 @@ function GroupLayerView({ layer, o, cls }: LayerProps<GroupLayer>) {
   );
 }
 
-function ShapeLayerView({ layer, o, style, cls }: LayerProps<ShapeLayer>) {
+function ShapeLayerView({ layer, o, f, style, cls }: LayerProps<ShapeLayer>) {
   const { values, scale, settings } = useRender();
   const t = settings.transitionMs;
   return (
@@ -270,6 +278,7 @@ function ShapeLayerView({ layer, o, style, cls }: LayerProps<ShapeLayer>) {
         borderRadius: layer.radius * scale,
         border: layer.borderWidth > 0 ? `${layer.borderWidth * scale}px solid ${color(o.borderColor ?? layer.borderColor, values)}` : undefined,
         transition: t ? `background-color ${t}ms, border-color ${t}ms` : undefined,
+        ...flashAnim(f, ['fill', 'border']),
       }}
     />
   );
@@ -290,7 +299,7 @@ function ImageLayerView({ layer, style, cls }: LayerProps<ImageLayer>) {
   );
 }
 
-function BarLayerView({ layer, o, style, cls }: LayerProps<BarLayer>) {
+function BarLayerView({ layer, o, f, style, cls }: LayerProps<BarLayer>) {
   const { values, scale, settings } = useRender();
   const timed = layer.source !== 'value';
   const live = readBar(layer, values);
@@ -314,6 +323,7 @@ function BarLayerView({ layer, o, style, cls }: LayerProps<BarLayer>) {
         style={{
           position: 'absolute', ...fillPos, background: color(fill, values),
           transition: [anim && `width ${anim}, height ${anim}`, t && `background-color ${t}ms`].filter(Boolean).join(', ') || undefined,
+          ...flashAnim(f, ['fill']),
         }}
       />
     </div>

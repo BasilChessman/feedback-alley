@@ -40,13 +40,24 @@ export interface StyleOverride {
   background?: string; // layer background color
   opacity?: number; // 0-100
   visible?: boolean;
-  flash?: boolean;
+  flash?: boolean | FlashSpec; // true (older projects) = blink the whole item
   text?: string;
   // a layer's header (see LayerHeader)
   headerVisible?: boolean;
   headerFill?: string;
   headerTextColor?: string;
   headerText?: string;
+}
+
+// What a Flash rule flashes, and how. Each part alternates between its own
+// color and `color`; with no color it blinks (disappears). 'all' blinks the
+// whole item.
+export type FlashPart = 'all' | 'fill' | 'border' | 'text' | 'background' | 'header';
+
+export interface FlashSpec {
+  parts: FlashPart[];
+  color: string; // '' = blink
+  speed: number; // seconds per on/off cycle
 }
 
 export interface FeedbackRule {

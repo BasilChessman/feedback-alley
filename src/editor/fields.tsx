@@ -11,12 +11,19 @@ export const ValuesCtx = createContext<Values>({});
 // Open/closed state of sections given a remember key, kept while the app runs.
 const sectionOpen = new Map<string, boolean>();
 
+// Sections inside start collapsed and remember whether they're open, per item
+// (the value is the item's id).
+export const SectionScope = createContext<string | null>(null);
+
 export function Section({ title, children, actions, defaultOpen = true, remember }: {
   title: string; children: ReactNode; actions?: ReactNode; defaultOpen?: boolean; remember?: string;
 }) {
-  const [open, setOpenState] = useState(() => (remember && sectionOpen.get(remember)) ?? defaultOpen);
+  const scope = useContext(SectionScope);
+  // counts in titles, e.g. "Layers (3)", aren't part of the key
+  const key = remember ?? (scope ? `${scope}:${title.replace(/\s*\(\d+\)$/, '')}` : undefined);
+  const [open, setOpenState] = useState(() => (key && sectionOpen.get(key)) ?? (scope ? false : defaultOpen));
   const setOpen = (v: boolean) => {
-    if (remember) sectionOpen.set(remember, v);
+    if (key) sectionOpen.set(key, v);
     setOpenState(v);
   };
   return (
