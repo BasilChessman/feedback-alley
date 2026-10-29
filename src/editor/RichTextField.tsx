@@ -1,6 +1,7 @@
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { hasRefs, resolveText } from '../lib/variables';
 import { ValuesCtx } from './fields';
+import { ColorSwatch } from './ColorPicker';
 
 // Paired markers the toolbar inserts around the selected text (see renderMarkdown).
 type Simple = { open: string; close: string };
@@ -99,13 +100,13 @@ export function RichTextField({ value, onChange, placeholder }: { value: string;
           <button className="fmt" onClick={() => styleTag('color', color)}>
             <span className="fmt-a" style={{ borderBottomColor: color }}>A</span>
           </button>
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} title="Choose text color" />
+          <ColorSwatch value={color} onChange={(c) => c && setColor(c)} className="fmt-swatch" title="Choose text color" />
         </span>
         <span className="fmt-color" title="Highlight the selection">
           <button className="fmt" onClick={() => styleTag('bg', highlight)}>
             <span className="fmt-hl" style={{ background: highlight }}>ab</span>
           </button>
-          <input type="color" value={highlight} onChange={(e) => setHighlight(e.target.value)} title="Choose highlight color" />
+          <ColorSwatch value={highlight} onChange={(c) => c && setHighlight(c)} className="fmt-swatch" title="Choose highlight color" />
         </span>
         <select
           className="fmt-size"

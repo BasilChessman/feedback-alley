@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import type { BarLayer, Block, GroupLayer, ImageLayer, Layer, Screen, Settings, ShapeLayer, TextLayer, Values } from '../types';
+import type { BarLayer, Block, GroupLayer, ImageLayer, Layer, Screen, Settings, ShapeLayer, TextLayer, TextStyle, Values } from '../types';
 import { applyRules } from '../lib/rules';
 import { screenPx } from '../lib/pixels';
+import { activeHeader, headerRects } from '../lib/header';
 import { readBar, thresholdColor } from '../lib/bar';
 import { renderMarkdown, resolveText, toCssColor } from '../lib/variables';
 
@@ -124,13 +125,30 @@ export function LayerView({ layer }: { layer: Layer }) {
     transition: t ? `background-color ${t}ms` : undefined,
   };
   const props = { o, style: {}, cls: 'layer-content' };
-  return (
-    <div className={`layer${o.flash ? ' flash' : ''}`} style={wrapper}>
+  const content = (
+    <>
       {layer.type === 'text' && <TextLayerView layer={layer} {...props} />}
       {layer.type === 'shape' && <ShapeLayerView layer={layer} {...props} />}
       {layer.type === 'image' && <ImageLayerView layer={layer} {...props} />}
       {layer.type === 'bar' && <BarLayerView layer={layer} {...props} />}
       {layer.type === 'group' && <GroupLayerView layer={layer} {...props} />}
+    </>
+  );
+  const header = activeHeader(layer);
+  if (!header) {
+    return <div className={`layer${o.flash ? ' flash' : ''}`} style={wrapper}>{content}</div>;
+  }
+  // header strip on one side; the layer's own content fills the rest
+  const r = headerRects(header);
+  return (
+    <div className={`layer${o.flash ? ' flash' : ''}`} style={wrapper}>
+      <div className="layer-part" style={{ ...pct(r.content), containerType: 'size' }}>{content}</div>
+      <div
+        className="layer-part layer-header"
+        style={{ ...pct(r.header), backgroundColor: color(header.fill, values), transition: t ? `background-color ${t}ms` : undefined }}
+      >
+        <TextView t={header} cls="layer-content" />
+      </div>
     </div>
   );
 }
@@ -138,11 +156,17 @@ export function LayerView({ layer }: { layer: Layer }) {
 type LayerProps<L> = { layer: L; o: ReturnType<typeof applyRules>; style: CSSProperties; cls: string };
 
 function TextLayerView({ layer, o, style, cls }: LayerProps<TextLayer>) {
+  return <TextView t={layer} text={o.text} textColor={o.textColor} style={style} cls={cls} />;
+}
+
+// Text with its settings: a text layer's content, or a layer's header.
+// `text` and `textColor` are feedback-rule overrides.
+function TextView({ t: layer, text, textColor, style, cls }: { t: TextStyle; text?: string; textColor?: string; style?: CSSProperties; cls: string }) {
   const { values, settings } = useRender();
-  const html = renderMarkdown(resolveText(o.text ?? layer.text, values, { forMarkdown: true }));
+  const html = renderMarkdown(resolveText(text ?? layer.text, values, { forMarkdown: true }));
   const t = settings.transitionMs;
   const textStyle: CSSProperties = {
-    color: color(o.textColor ?? layer.color, values, '#fff'),
+    color: color(textColor ?? layer.color, values, '#fff'),
     fontFamily: layer.font || undefined,
     fontWeight: layer.weight,
     fontStyle: layer.italic ? 'italic' : undefined,

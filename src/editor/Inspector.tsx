@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import type { Anchor, BarLayer, Block, GroupLayer, ImageLayer, Layer, Rect, Screen, ShapeLayer, TextLayer } from '../types';
+import type { Anchor, BarLayer, Block, GroupLayer, ImageLayer, Layer, LayerHeader, Rect, Screen, ShapeLayer, TextLayer, TextStyle } from '../types';
 import { ASPECT_PRESETS, RESOLUTIONS } from '../lib/defaults';
 import { containerAt, containerRect, countLayers, groupAt } from '../lib/tree';
 import { rectPx, scaleStrokes, screenPx } from '../lib/pixels';
@@ -11,6 +11,7 @@ import { RulesEditor, type RuleProp } from './RulesEditor';
 import { RichTextField } from './RichTextField';
 import { BarProps } from './BarProps';
 import { nearestAnchor } from '../lib/fixed';
+import { HEADER_MAX, HEADER_MIN, newHeader, supportsHeader } from '../lib/header';
 import { ColorField, ImageField, NumberField, Row, Section, Segmented, Select, Slider, TextField, Toggle } from './fields';
 
 export const FONT_SUGGESTIONS = [
@@ -654,10 +655,11 @@ function LayerInspector({ block, path, layer, inside = false }: { block: Block; 
       {layer.type === 'shape' && <ShapeProps layer={layer} set={set} />}
       {layer.type === 'image' && <ImageProps layer={layer} set={set} />}
       {layer.type === 'bar' && <BarProps layer={layer} set={(fn) => set<BarLayer>(fn)} />}
+      {supportsHeader(layer) && <HeaderProps layer={layer} set={set} />}
 
       <Section title="Background & corners" defaultOpen={!!(layer.bgColor || layer.bgImage || layer.radius)}>
         <Row label="Color" hint="Leave empty for none">
-          <ColorField value={layer.bgColor} onChange={(v) => set((l) => (l.bgColor = v))} />
+          <ColorField value={layer.bgColor} allowNone onChange={(v) => set((l) => (l.bgColor = v))} />
         </Row>
         <Row label="Image"><ImageField value={layer.bgImage} onChange={(v) => set((l) => (l.bgImage = v))} /></Row>
         {layer.bgImage && (
@@ -708,42 +710,88 @@ function GroupProps({ block, path, layer, set, inside }: { block: Block; path: s
 }
 
 function TextProps({ layer, set }: { layer: TextLayer; set: Setter }) {
-  const s = (fn: (l: TextLayer) => void) => set<TextLayer>(fn);
   return (
     <Section title="Text">
-      <RichTextField value={layer.text} onChange={(v) => s((l) => (l.text = v))} placeholder="Text with $(connection:variable)" />
+      <TextStyleFields t={layer} set={(fn) => set<TextLayer>(fn)} />
+    </Section>
+  );
+}
+
+// Text and how it's set, for a text layer or a layer's header.
+function TextStyleFields({ t, set: s, sizeOf = 'layer' }: { t: TextStyle; set: (fn: (x: TextStyle) => void) => void; sizeOf?: string }) {
+  return (
+    <>
+      <RichTextField value={t.text} onChange={(v) => s((x) => (x.text = v))} placeholder="Text with $(connection:variable)" />
       <p className="muted small">
         Select words or variables, then use the toolbar. Variables: <code>$(internal:time_hms)</code>, other connections <code>[1]$(…)</code>.
         Enter = new line; a blank line starts a new paragraph.
       </p>
       <Row label="Size">
-        <Segmented value={layer.sizeMode} onChange={(v) => s((l) => (l.sizeMode = v))} options={[{ value: 'fit', label: 'Auto-fit' }, { value: 'fixed', label: 'Fixed' }]} />
+        <Segmented value={t.sizeMode} onChange={(v) => s((x) => (x.sizeMode = v))} options={[{ value: 'fit', label: 'Auto-fit' }, { value: 'fixed', label: 'Fixed' }]} />
       </Row>
-      <Row label={layer.sizeMode === 'fit' ? 'Max size' : 'Font size'} hint="% of layer height">
-        <Slider value={layer.fontSize} min={5} max={100} onChange={(v) => s((l) => (l.fontSize = v))} />
+      <Row label={t.sizeMode === 'fit' ? 'Max size' : 'Font size'} hint={`% of ${sizeOf} height`}>
+        <Slider value={t.fontSize} min={5} max={100} onChange={(v) => s((x) => (x.fontSize = v))} />
       </Row>
       <Row label="Font">
-        <input list="font-suggestions" value={layer.font} placeholder="Project default" onChange={(e) => s((l) => (l.font = e.target.value))} />
+        <input list="font-suggestions" value={t.font} placeholder="Project default" onChange={(e) => s((x) => (x.font = e.target.value))} />
       </Row>
       <Row label="Weight">
-        <Select value={layer.weight} onChange={(v) => s((l) => (l.weight = v))} options={[300, 400, 500, 600, 700, 800, 900].map((w) => ({ value: w, label: String(w) }))} />
+        <Select value={t.weight} onChange={(v) => s((x) => (x.weight = v))} options={[300, 400, 500, 600, 700, 800, 900].map((w) => ({ value: w, label: String(w) }))} />
       </Row>
-      <Row label="Italic"><Toggle value={layer.italic} onChange={(v) => s((l) => (l.italic = v))} /></Row>
-      <Row label="Color"><ColorField value={layer.color} onChange={(v) => s((l) => (l.color = v))} /></Row>
+      <Row label="Italic"><Toggle value={t.italic} onChange={(v) => s((x) => (x.italic = v))} /></Row>
+      <Row label="Color"><ColorField value={t.color} onChange={(v) => s((x) => (x.color = v))} /></Row>
       <Row label="Align">
-        <Segmented value={layer.align} onChange={(v) => s((l) => (l.align = v))} options={[{ value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }]} />
+        <Segmented value={t.align} onChange={(v) => s((x) => (x.align = v))} options={[{ value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }]} />
       </Row>
       <Row label="Vertical">
-        <Segmented value={layer.valign} onChange={(v) => s((l) => (l.valign = v))} options={[{ value: 'top', label: 'Top' }, { value: 'middle', label: 'Middle' }, { value: 'bottom', label: 'Bottom' }]} />
+        <Segmented value={t.valign} onChange={(v) => s((x) => (x.valign = v))} options={[{ value: 'top', label: 'Top' }, { value: 'middle', label: 'Middle' }, { value: 'bottom', label: 'Bottom' }]} />
       </Row>
       <Row label="Line spacing" hint="× text size">
-        <Slider value={layer.lineHeight} min={0.7} max={3} step={0.05} onChange={(v) => s((l) => (l.lineHeight = v))} />
+        <Slider value={t.lineHeight} min={0.7} max={3} step={0.05} onChange={(v) => s((x) => (x.lineHeight = v))} />
       </Row>
       <Row label="Paragraph spacing" hint="Extra space between paragraphs, × text size">
-        <Slider value={layer.paraSpacing} min={0} max={3} step={0.05} onChange={(v) => s((l) => (l.paraSpacing = v))} />
+        <Slider value={t.paraSpacing} min={0} max={3} step={0.05} onChange={(v) => s((x) => (x.paraSpacing = v))} />
       </Row>
-      <Row label="Wrap lines"><Toggle value={layer.wrap} onChange={(v) => s((l) => (l.wrap = v))} /></Row>
-      <Row label="Padding" hint="% of layer height"><NumberField value={layer.padding} min={0} max={45} onChange={(v) => s((l) => (l.padding = v))} /></Row>
+      <Row label="Wrap lines"><Toggle value={t.wrap} onChange={(v) => s((x) => (x.wrap = v))} /></Row>
+      <Row label="Padding" hint={`% of ${sizeOf} height`}><NumberField value={t.padding} min={0} max={45} onChange={(v) => s((x) => (x.padding = v))} /></Row>
+    </>
+  );
+}
+
+const HEADER_SIDES: { value: LayerHeader['side']; label: string }[] = [
+  { value: 'top', label: 'Top' }, { value: 'bottom', label: 'Bottom' },
+  { value: 'left', label: 'Left' }, { value: 'right', label: 'Right' },
+];
+
+// An optional strip along one side of the layer with its own fill and text.
+function HeaderProps({ layer, set }: { layer: Layer; set: Setter }) {
+  const h = layer.header;
+  const on = !!h?.enabled;
+  const sh = (fn: (x: LayerHeader) => void) => set((l) => fn(l.header!));
+  return (
+    <Section title="Header" defaultOpen={on}>
+      <Row label="Show header" hint="A strip along one side with its own fill and text">
+        <Toggle
+          value={on}
+          onChange={(v) => set((l) => {
+            if (!l.header) l.header = newHeader();
+            l.header.enabled = v;
+          })}
+        />
+      </Row>
+      {on && h && (
+        <>
+          <Row label="Side">
+            <Select value={h.side} onChange={(v) => sh((x) => (x.side = v))} options={[...HEADER_SIDES]} />
+          </Row>
+          <Row label="Size" hint={`% of the layer’s ${h.side === 'top' || h.side === 'bottom' ? 'height' : 'width'}. You can also drag the divider on the canvas.`}>
+            <Slider value={Math.round(h.size)} min={HEADER_MIN} max={HEADER_MAX} onChange={(v) => sh((x) => (x.size = v))} />
+          </Row>
+          <Row label="Fill"><ColorField value={h.fill} allowNone onChange={(v) => sh((x) => (x.fill = v))} /></Row>
+          <div className="subhead">Header text</div>
+          <TextStyleFields t={h} set={(fn) => sh(fn)} sizeOf="header" />
+        </>
+      )}
     </Section>
   );
 }

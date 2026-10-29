@@ -16,6 +16,11 @@ interface StoreCtx {
   // the whole drag becomes a single undo step.
   mutate: (fn: (draft: Project) => void, transient?: boolean) => void;
   beginGesture: () => void;
+  // For controls that only have a plain onChange (e.g. a color picker being
+  // dragged): between holdHistory() and releaseHistory(), every edit merges
+  // into one undo step.
+  holdHistory: () => void;
+  releaseHistory: () => void;
   replace: (p: Project) => void;
   undo: () => void;
   redo: () => void;
@@ -25,6 +30,9 @@ interface StoreCtx {
 }
 
 const Ctx = createContext<StoreCtx | null>(null);
+
+// For components that may render outside the editor (no store).
+export const useOptionalStore = () => useContext(Ctx);
 
 export function useStore() {
   const c = useContext(Ctx);
@@ -81,19 +89,30 @@ export function StoreProvider({ initial, children }: { initial: Project; childre
     future.current = [];
   }, []);
 
+  // true while a control holds history: its edits merge into one undo step
+  const held = useRef(false);
+
   const mutate = useCallback(
     (fn: (draft: Project) => void, transient = false) => {
       const prev = projectRef.current;
       const next = structuredClone(prev);
       fn(next);
       syncFixedLayers(next);
-      if (!transient) pushHistory(prev);
+      if (!transient && !held.current) pushHistory(prev);
       commit(next);
     },
     [pushHistory, commit],
   );
 
   const beginGesture = useCallback(() => pushHistory(projectRef.current), [pushHistory]);
+  const holdHistory = useCallback(() => {
+    if (held.current) return;
+    pushHistory(projectRef.current);
+    held.current = true;
+  }, [pushHistory]);
+  const releaseHistory = useCallback(() => {
+    held.current = false;
+  }, []);
 
   const replace = useCallback(
     (p: Project) => {
@@ -136,10 +155,10 @@ export function StoreProvider({ initial, children }: { initial: Project; childre
 
   const value = useMemo<StoreCtx>(
     () => ({
-      project, mutate, beginGesture, replace, undo, redo,
+      project, mutate, beginGesture, holdHistory, releaseHistory, replace, undo, redo,
       canUndo: past.current.length > 0, canRedo: future.current.length > 0, saveState,
     }),
-    [project, mutate, beginGesture, replace, undo, redo, saveState],
+    [project, mutate, beginGesture, holdHistory, releaseHistory, replace, undo, redo, saveState],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
