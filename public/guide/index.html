@@ -55,6 +55,10 @@
   figure.panel img { max-width: 320px; }
   figure.pair { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
   figure.pair > div { flex: 0 1 320px; }
+  /* a tall screenshot in a column beside the text it explains */
+  .beside { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 28px; align-items: start; }
+  .beside > figure { margin-top: 4px; }
+  .beside > div > :first-child { margin-top: 0; }
   figcaption { color: var(--muted); font-size: 14px; margin-top: 8px; }
   .note, .tip, .warn { border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; border-left: 4px solid; }
   .note { background: #eef4ff; border-color: var(--accent); }
@@ -82,6 +86,8 @@
     .layout { display: block; }
     nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
     main { padding: 24px 16px 60px; }
+    .beside { display: block; }
+    .beside > figure img { max-width: 280px; }
   }
   @media print {
     @page { margin: 16mm 14mm; }
@@ -97,6 +103,8 @@
     h2, h3, h4 { break-after: avoid; }
     figure.panel img, figure.pair img { max-height: 4.6in; width: auto; }
     figure.pair > div { flex: 0 1 auto; }
+    .beside { display: grid; grid-template-columns: minmax(0, 1fr) 2.3in; gap: 0.3in; }
+    .beside > figure img { max-height: 7.4in; width: auto; max-width: 100%; }
     figure, table, .note, .tip, .warn, pre { break-inside: avoid; }
     figure img { box-shadow: none; }
     a { color: inherit; text-decoration: none; }
@@ -549,16 +557,14 @@
 <p>Templates keep their real proportions when you use them on a screen with a different shape.</p>
 
 <h2 id="find-replace">Find &amp; Replace</h2>
+<div class="beside">
+<div>
 <p>
   Often you need the same block several times, once for <code>device1</code>, once for <code>device2</code> and so on.
   Instead of retyping every variable, select the block and open <b>Find &amp; Replace</b> in the right pane, just above
   <b>Layers</b>. It lists every variable the block uses and every piece of text in it (the block name, text layers, headers
   and text set by feedback rules), each in a box you can edit. The originals are shown above each box.
 </p>
-<figure>
-  <img src="img/find-replace.png" alt="The Find and Replace section: 1 replaced with 2, the device1 connection renamed to device2 with live values under each variable, and the block name and header text changed to Camera 2" style="max-width: 320px">
-  <figcaption>Connection <code>device1</code> renamed to <code>device2</code>, and “1” replaced with “2” in the text. Changed boxes are highlighted.</figcaption>
-</figure>
 <p>There are three ways to make changes, and you can mix them:</p>
 <ul>
   <li><b>Connection</b>: change <code>device1</code> to <code>device2</code> once and every variable from that connection follows.</li>
@@ -581,6 +587,12 @@
   Variables are renamed everywhere they’re used: text, headers, images, bars and feedback rules. Select several blocks to change
   them all at once; each piece of text is labeled with its block’s name. <b>Undo</b> (⌘Z) takes a change back in one step.
 </p>
+</div>
+<figure>
+  <img src="img/find-replace.png" alt="The Find and Replace section: 1 replaced with 2, the device1 connection renamed to device2 with live values under each variable, and the block name and header text changed to Camera 2">
+  <figcaption>Connection <code>device1</code> renamed to <code>device2</code>, and “1” replaced with “2” in the text. Changed boxes are highlighted.</figcaption>
+</figure>
+</div>
 <p class="tip">
   Quick way to make a row of devices: set up the first block, then use <b>Duplicate with changes</b> with <code>1</code> → <code>2</code>,
   select the new copy and repeat with <code>2</code> → <code>3</code>, and so on.
