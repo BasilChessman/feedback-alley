@@ -75,7 +75,7 @@ To build locally: `npm run dist:mac`, `npm run dist:win` or `npm run dist:linux`
 |---|---|
 | **Screen** | A layout with a fixed aspect ratio (16:9, 4:3, 32:9, 9:16, custom…). It is resolution-independent: the same 16:9 screen fills 1280×720, 1920×1080 or 3840×2160 exactly. |
 | **Block** | A positioned box on the screen (fill, border, radius, opacity, feedback rules, optional Companion button press). |
-| **Layer** | Content inside a block: **Text**, **Shape**, **Image** or **Bar/meter**. Layers are positioned in % of their block, so they resize with it, or set **Sizing → Fixed** to keep a layer's size, pinned to an anchor point. Text can auto-fit its layer. Every layer can have its own background color and/or image and rounded corners. |
+| **Layer** | Content inside a block: **Text**, **Shape**, **Image** or **Bar/meter**. Layers are positioned in % of their block, so they resize with it, or set **Sizing → Fixed** to keep a layer's size, pinned to an anchor point. Any layer except a group can have a **header**: a strip on one side with its own fill and text, resized by dragging its divider. Text can auto-fit its layer. Every layer can have its own background color and/or image and rounded corners. |
 | **Group** | A layer that holds other layers: a block within a block. Its children are positioned in % of the group, so they follow it, and groups can be nested. A group has its own background, border, corners, clipping and feedback rules (e.g. hide or color a whole cluster at once). |
 | **Template** | One or more blocks saved with their layers and rules. **Drag** a template onto the screen to place it (it snaps like a move), or click **Insert** to put it where it was saved. When the aspect ratio differs, blocks keep their real proportions. |
 
