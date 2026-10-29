@@ -1,3 +1,5 @@
+import { askText } from '../editor/askText';
+
 // Save text to a file the user names and places. Uses the system Save dialog
 // where the browser has one (Chrome, Edge and the desktop app); elsewhere
 // (Safari, Firefox) it asks for a name and the browser's download setting
@@ -22,7 +24,7 @@ export async function saveTextFile(suggestedName: string, text: string, descript
       // e.g. not allowed in this context: fall back to a download
     }
   }
-  let name = prompt('Save as', suggestedName)?.trim();
+  let name = await askText({ title: 'Export project', label: 'File name', value: suggestedName, okLabel: 'Save' });
   if (!name) return null;
   if (!/\.json$/i.test(name)) name += '.json';
   const a = document.createElement('a');
