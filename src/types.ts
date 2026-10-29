@@ -68,6 +68,7 @@ interface LayerBase extends Rect {
   anchorX?: Anchor; // 0 left, 0.5 center, 1 right
   anchorY?: Anchor; // 0 top, 0.5 middle, 1 bottom
   fixed?: FixedState; // bookkeeping for fixed layers (see lib/fixed.ts)
+  header?: LayerHeader;
 }
 
 export type Anchor = 0 | 0.5 | 1;
@@ -80,8 +81,8 @@ export interface FixedState {
   c: string; // parent id (block or group)
 }
 
-export interface TextLayer extends LayerBase {
-  type: 'text';
+// Text and how it's set: shared by text layers and layer headers.
+export interface TextStyle {
   text: string;
   font: string; // '' = project default
   sizeMode: 'fit' | 'fixed';
@@ -95,6 +96,19 @@ export interface TextLayer extends LayerBase {
   padding: number; // % of layer height
   lineHeight: number; // multiple of the font size
   paraSpacing: number; // extra space between paragraphs (blank line in the text), in em
+}
+
+export interface TextLayer extends LayerBase, TextStyle {
+  type: 'text';
+}
+
+// An optional strip along one side of a layer, with its own fill and text.
+// The layer's own content fills the rest.
+export interface LayerHeader extends TextStyle {
+  enabled: boolean; // off keeps the settings for later
+  side: 'top' | 'bottom' | 'left' | 'right';
+  size: number; // % of the layer's height (top/bottom) or width (left/right)
+  fill: string;
 }
 
 export interface ShapeLayer extends LayerBase {

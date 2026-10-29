@@ -3,6 +3,7 @@ import { createContext, useContext } from 'react';
 import type { Values } from '../types';
 import { hasRefs, resolveText, toCssColor } from '../lib/variables';
 import { api } from '../lib/api';
+import { ColorSwatch } from './ColorPicker';
 
 // Live values for inline previews under fields that contain variables.
 export const ValuesCtx = createContext<Values>({});
@@ -102,16 +103,12 @@ export function Slider({ value, onChange, min = 0, max = 100, step = 1 }: { valu
 
 // Color: swatch picker plus a text field that also accepts variables,
 // rgba(), named colors, or Companion's decimal color integers.
-export function ColorField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function ColorField({ value, onChange, allowNone }: { value: string; onChange: (v: string) => void; allowNone?: boolean }) {
   const values = useContext(ValuesCtx);
   const resolved = toCssColor(resolveText(value, values));
-  const hex = /^#[0-9a-f]{6}/i.test(resolved) ? resolved.slice(0, 7) : '#000000';
-  const alpha = /^#[0-9a-f]{8}$/i.test(value) ? value.slice(7) : '';
   return (
     <span className="color-field">
-      <span className="swatch" style={{ background: resolved }}>
-        <input type="color" value={hex} onChange={(e) => onChange(e.target.value + alpha)} />
-      </span>
+      <ColorSwatch value={value} display={resolved === 'transparent' ? '' : resolved} onChange={onChange} allowNone={allowNone} />
       <TextField value={value} onChange={onChange} placeholder="#rrggbb or $(var)" />
     </span>
   );

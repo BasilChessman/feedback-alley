@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type DragEvent, type PointerEvent as RPointerEvent } from 'react';
-import type { Rect, Settings } from '../types';
+import type { Layer, Rect, Settings } from '../types';
+import { activeHeader, headerRects, HEADER_MAX, HEADER_MIN } from '../lib/header';
 import { rectPx, screenPx } from '../lib/pixels';
 import { ScreenView } from '../render/ScreenView';
 import { boundsOf, instantiateTemplateAt } from '../lib/defaults';
@@ -249,6 +250,32 @@ function Overlay({ width, height }: { width: number; height: number }) {
 
   const select = (ids: string[]) => setSel(focus ? { ...sel, layers: ids } : selectBlocks(ids));
 
+  // Drag a layer's header divider: the header's size follows the pointer.
+  const onDividerDown = (e: RPointerEvent<HTMLSpanElement>, id: string) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    const box = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+    beginGesture();
+    const move = (ev: PointerEvent) => {
+      updateScreen((s) => {
+        const b = focus && s.blocks.find((x) => x.id === focus.id);
+        const l = b && containerAt(b, sel.path)?.layers.find((x) => x.id === id);
+        const h = l?.header;
+        if (!h) return;
+        const fx = ((ev.clientX - box.left) / box.width) * 100;
+        const fy = ((ev.clientY - box.top) / box.height) * 100;
+        const size = h.side === 'top' ? fy : h.side === 'bottom' ? 100 - fy : h.side === 'left' ? fx : 100 - fx;
+        h.size = Math.round(Math.max(HEADER_MIN, Math.min(HEADER_MAX, size)) * 10) / 10;
+      }, true);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
   const writeRects = (rects: Map<string, Rect>) => {
     updateScreen((s) => {
       const list: (Rect & { id: string })[] = focus
@@ -389,6 +416,21 @@ function Overlay({ width, height }: { width: number; height: number }) {
                   {HANDLES.map((h) => (
                     <span key={h} className={`handle h-${h}`} onPointerDown={(e) => onHandleDown(e, item.id, h)} />
                   ))}
+                  {(() => {
+                    const header = focus && activeHeader(item as Layer);
+                    if (!header) return null;
+                    const r = headerRects(header).header;
+                    const horizontal = header.side === 'top' || header.side === 'bottom';
+                    const at = header.side === 'top' ? r.h : header.side === 'bottom' ? r.y : header.side === 'left' ? r.w : r.x;
+                    return (
+                      <span
+                        className={`header-divider ${horizontal ? 'horizontal' : 'vertical'}`}
+                        style={horizontal ? { top: `${at}%` } : { left: `${at}%` }}
+                        title="Drag to resize the header"
+                        onPointerDown={(e) => onDividerDown(e, item.id)}
+                      />
+                    );
+                  })()}
                 </>
               )}
             </div>
