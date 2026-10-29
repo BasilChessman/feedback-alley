@@ -80,7 +80,7 @@ function BlockView({ block }: { block: Block }) {
   if (ruleHidden && !editing) return null;
   const t = settings.transitionMs;
   const opacity = (o.opacity ?? block.opacity) / 100;
-  const clickable = !editing && !!block.press?.location && !!onPress;
+  const clickable = !editing && (!!block.press?.location || !!block.goTo) && !!onPress;
   const f = flashSpec(o.flash);
   return (
     <div

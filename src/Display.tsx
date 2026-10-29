@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Block, Project } from './types';
+import { GO_BACK, GO_HOME, type Block, type Project } from './types';
 import { api } from './lib/api';
 import { migrate } from './lib/store';
 import { useLiveValues } from './lib/useLiveValues';
@@ -11,8 +11,11 @@ const CURSOR_HIDE_MS = 2500;
 
 // Full-window output for a screen. Letterboxes to keep the screen's aspect,
 // follows edits made in the editor live, and hides the cursor when idle.
+// Blocks with "Go to screen" switch this display (only) to another screen;
+// screenId is where it starts and what "Start screen" returns to.
 export function Display({ screenId }: { screenId: string }) {
   const [project, setProject] = useState<Project | null>(null);
+  const [nav, setNav] = useState<{ current: string; history: string[] }>({ current: screenId, history: [] });
   const [error, setError] = useState('');
   const rev = useRef(-1);
 
@@ -43,7 +46,8 @@ export function Display({ screenId }: { screenId: string }) {
 
   useIdleCursor();
 
-  const screen = project?.screens.find((s) => s.id === screenId);
+  // a screen deleted while shown falls back to the start screen
+  const screen = project?.screens.find((s) => s.id === nav.current) ?? project?.screens.find((s) => s.id === screenId);
   const refs = useMemo(() => (screen ? collectRefs(screen) : []), [screen]);
   const { values, serverDown } = useLiveValues(refs, project?.settings.refreshMs ?? 250);
 
@@ -51,8 +55,16 @@ export function Display({ screenId }: { screenId: string }) {
   if (!screen) return <ScreenPicker project={project} missing />;
 
   const press = (b: Block) => {
-    if (b.press) api.press(b.press.connection, b.press.location).catch(() => {});
+    if (b.press?.location) api.press(b.press.connection, b.press.location).catch(() => {});
+    if (b.goTo) go(b.goTo);
   };
+  const go = (to: string) =>
+    setNav((n) => {
+      if (to === GO_HOME) return { current: screenId, history: [] };
+      if (to === GO_BACK) return n.history.length ? { current: n.history[n.history.length - 1], history: n.history.slice(0, -1) } : { current: screenId, history: [] };
+      if (to === screen!.id || !project.screens.some((s) => s.id === to)) return n;
+      return { current: to, history: [...n.history, screen!.id].slice(-50) };
+    });
 
   return (
     <div

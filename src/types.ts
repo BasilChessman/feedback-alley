@@ -196,7 +196,14 @@ export interface Block extends Rect {
   rules: FeedbackRule[];
   layers: Layer[]; // paint order: last is on top
   press?: PressAction;
+  // Clicking the block on a display switches that display to another screen:
+  // a screen id, GO_BACK (the screen it came from) or GO_HOME (the screen the
+  // display started on). Can be combined with a Companion button press.
+  goTo?: string;
 }
+
+export const GO_BACK = '@back';
+export const GO_HOME = '@home';
 
 export interface Screen {
   id: string;
