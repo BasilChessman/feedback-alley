@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import type { BarLayer, Block, GroupLayer, ImageLayer, Layer, Screen, Settings, ShapeLayer, TextLayer, TextStyle, Values } from '../types';
 import { applyRules } from '../lib/rules';
 import { screenPx } from '../lib/pixels';
-import { activeHeader, headerRects } from '../lib/header';
+import { headerRects, supportsHeader } from '../lib/header';
 import { readBar, thresholdColor } from '../lib/bar';
 import { renderMarkdown, resolveText, toCssColor } from '../lib/variables';
 
@@ -134,7 +134,8 @@ export function LayerView({ layer }: { layer: Layer }) {
       {layer.type === 'group' && <GroupLayerView layer={layer} {...props} />}
     </>
   );
-  const header = activeHeader(layer);
+  // a rule can show a header that's switched off, or hide one that's on
+  const header = supportsHeader(layer) && layer.header && (o.headerVisible ?? layer.header.enabled) ? layer.header : null;
   if (!header) {
     return <div className={`layer${o.flash ? ' flash' : ''}`} style={wrapper}>{content}</div>;
   }
@@ -145,9 +146,9 @@ export function LayerView({ layer }: { layer: Layer }) {
       <div className="layer-part" style={{ ...pct(r.content), containerType: 'size' }}>{content}</div>
       <div
         className="layer-part layer-header"
-        style={{ ...pct(r.header), backgroundColor: color(header.fill, values), transition: t ? `background-color ${t}ms` : undefined }}
+        style={{ ...pct(r.header), backgroundColor: color(o.headerFill ?? header.fill, values), transition: t ? `background-color ${t}ms` : undefined }}
       >
-        <TextView t={header} cls="layer-content" />
+        <TextView t={header} text={o.headerText} textColor={o.headerTextColor} cls="layer-content" />
       </div>
     </div>
   );
