@@ -488,3 +488,12 @@ input.bad { border-color: #e5484d; }
 .flash-editor { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 4px 0 2px; }
 .flash-parts { flex-wrap: wrap; }
 .flash-parts button { padding: 3px 9px; }
+
+/* Settings: editor address */
+.addr-list { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 10px; }
+.addr-row { display: flex; align-items: center; gap: 8px; }
+.addr-row code { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.addr-row button { margin-left: auto; }
+.addr-port { padding-top: 5px; font-variant-numeric: tabular-nums; }
+.ok-text { color: var(--ok); }
+.error-text { color: var(--danger); }

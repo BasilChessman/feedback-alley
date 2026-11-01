@@ -25,6 +25,21 @@ function readPrefs() {
   }
 }
 
+function writePrefs(prefs) {
+  fs.writeFileSync(prefsFile(), JSON.stringify(prefs, null, 2));
+}
+
+// Lets Settings show and change the port (see server/api.js).
+const control = {
+  info: () => ({ savedPort: readPrefs().port ?? DEFAULT_PORT, envPort: process.env.PORT ? Number(process.env.PORT) : null }),
+  setPort: (p) => writePrefs({ ...readPrefs(), port: p }),
+  restart: () => {
+    quitting = true;
+    app.relaunch();
+    app.exit(0);
+  },
+};
+
 let port = 0;
 let win = null;
 let quitting = false;
@@ -126,6 +141,7 @@ if (!app.requestSingleInstanceLock()) {
         dataDir: dataDir(),
         distDir: path.join(rootDir, 'dist'),
         fallback: 20,
+        control,
       }));
     } catch (err) {
       dialog.showErrorBox('Feedback Alley could not start', String(err.message || err));
