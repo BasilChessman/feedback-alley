@@ -10,12 +10,16 @@
 //   GET  /uploads/<file>
 //   GET  /api/output           -> { screenId }         which screen this port shows (null on the main port)
 //   GET  /api/outputs          -> { mainPort, outputs } per-screen output port status
+//   GET  /api/app-info         -> { port, urls, configurable, savedPort, envPort }   the editor's own address
+//   PUT  /api/app-port         <- { port }  saves the port for the next start (desktop app only)
+//   POST /api/app-restart      restarts the desktop app, e.g. on its new port
 
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { createOutputs } from './outputs.js';
+import { lanUrls, portFree } from './net.js';
 
 const REF_RE = /^(?:\[(\d+)\])?\$\(([^:)\s]+):([^)\s]+)\)$/;
 const FETCH_TIMEOUT_MS = 1500;
@@ -38,7 +42,8 @@ export function normalizeUrl(url) {
   return u.replace(/\/+$/, '');
 }
 
-export function createApi({ dataDir, host }) {
+// `control` (desktop app only): { info() -> { savedPort, envPort }, setPort(port), restart() }.
+export function createApi({ dataDir, host, control }) {
   const storeFile = path.join(dataDir, 'store.json');
   const assetDir = path.join(dataDir, 'assets');
   fs.mkdirSync(assetDir, { recursive: true });
@@ -54,6 +59,7 @@ export function createApi({ dataDir, host }) {
   }
 
   const outputs = createOutputs({ host });
+  let mainPort = 0;
   globalThis.__feedbackBoardOutputs = outputs;
 
   let writing = Promise.resolve();
@@ -176,6 +182,31 @@ export function createApi({ dataDir, host }) {
         await persist();
         return json(res, 200, { rev });
       }
+      if (p === '/api/app-info' && req.method === 'GET') {
+        const info = control?.info() ?? {};
+        return json(res, 200, {
+          port: mainPort,
+          urls: [`http://localhost:${mainPort}/`, ...lanUrls(mainPort)],
+          configurable: !!control,
+          savedPort: info.savedPort ?? null,
+          envPort: info.envPort ?? null,
+        });
+      }
+      if (p === '/api/app-port' && req.method === 'PUT') {
+        if (!control) return json(res, 400, { error: 'The port can only be changed in the desktop app.' });
+        const port = Number(JSON.parse((await readBody(req, 1024)).toString('utf8'))?.port);
+        if (!Number.isInteger(port) || port < 1024 || port > 65535) return json(res, 400, { error: 'Use a port from 1024 to 65535.' });
+        const screen = store?.screens?.find((s) => s.outputPort === port);
+        if (screen) return json(res, 409, { error: `Port ${port} is the output port of screen “${screen.name}”.` });
+        if (port !== mainPort && !(await portFree(port, host))) return json(res, 409, { error: `Port ${port} is in use by another program.` });
+        control.setPort(port);
+        return json(res, 200, { savedPort: port });
+      }
+      if (p === '/api/app-restart' && req.method === 'POST') {
+        if (!control) return json(res, 400, { error: 'Only the desktop app can restart itself.' });
+        setTimeout(() => control.restart(), 300);
+        return json(res, 200, { ok: true });
+      }
       if (p === '/api/variables' && req.method === 'POST') {
         const body = JSON.parse((await readBody(req, 1024 * 1024)).toString('utf8'));
         return json(res, 200, await handleVariables(body));
@@ -214,6 +245,7 @@ export function createApi({ dataDir, host }) {
 
   // Output listeners proxy to the main server, so they need to know where it is.
   handle.setMainPort = (port, mainHost) => {
+    mainPort = port;
     outputs.setMain(port, mainHost);
     outputs.sync(store);
   };

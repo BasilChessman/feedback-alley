@@ -3,10 +3,12 @@
 
 import http from 'node:http';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApi } from './api.js';
+import { lanUrls } from './net.js';
+
+export { lanUrls };
 
 export const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -20,24 +22,14 @@ const TYPES = {
   '.woff2': 'font/woff2',
 };
 
-// LAN addresses other machines (displays) can use to reach this one.
-export function lanUrls(port) {
-  const urls = [];
-  for (const addrs of Object.values(os.networkInterfaces())) {
-    for (const a of addrs || []) {
-      if (a.family === 'IPv4' && !a.internal) urls.push(`http://${a.address}:${port}/`);
-    }
-  }
-  return urls;
-}
-
 // Starts listening on `port`, or on the next free port after it when
-// `fallback` allows. Resolves with the port actually used.
-export function startServer({ port = 8090, host = '0.0.0.0', dataDir, distDir = path.join(rootDir, 'dist'), fallback = 0 }) {
+// `fallback` allows. Resolves with the port actually used. `control` lets the
+// desktop app's port be changed from Settings (see createApi).
+export function startServer({ port = 8090, host = '0.0.0.0', dataDir, distDir = path.join(rootDir, 'dist'), fallback = 0, control }) {
   if (!fs.existsSync(path.join(distDir, 'index.html'))) {
     throw new Error('dist/ is missing - run `npm run build` first (or `npm run dev` for development).');
   }
-  const api = createApi({ dataDir, host });
+  const api = createApi({ dataDir, host, control });
 
   const server = http.createServer(async (req, res) => {
     if (await api(req, res, null)) return;

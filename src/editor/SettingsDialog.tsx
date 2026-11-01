@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Project } from '../types';
-import { api } from '../lib/api';
+import { api, type AppInfo } from '../lib/api';
 import { uid } from '../lib/defaults';
 import { migrate, useStore } from '../lib/store';
 import { saveTextFile } from '../lib/saveFile';
@@ -48,6 +48,10 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           <button onClick={() => mutate((p) => p.connections.push({ id: uid(), label: `Companion ${p.connections.length + 1}`, url: '' }))}>
             + Add connection
           </button>
+        </Section>
+
+        <Section title="Editor address">
+          <EditorAddress />
         </Section>
 
         <Section title="Display">
@@ -98,5 +102,99 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         </Section>
       </div>
     </div>
+  );
+}
+
+// Where the editor and displays are reached, and (in the desktop app) the port.
+function EditorAddress() {
+  const [info, setInfo] = useState<AppInfo | null>(null);
+  const [failed, setFailed] = useState('');
+  const [port, setPort] = useState(0);
+  const [copied, setCopied] = useState('');
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = () =>
+    api.appInfo().then(
+      (i) => {
+        setInfo(i);
+        setPort(i.envPort ?? i.savedPort ?? i.port);
+      },
+      (e) => setFailed(String(e.message)),
+    );
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (!info) return <p className="muted small">{failed ? `Couldn’t read the address: ${failed}` : 'Loading…'}</p>;
+
+  const editable = info.configurable && info.envPort == null;
+  const pending = editable && info.savedPort != null && info.savedPort !== info.port;
+  const copy = (u: string) => {
+    navigator.clipboard?.writeText(u);
+    setCopied(u);
+    setTimeout(() => setCopied((c) => (c === u ? '' : c)), 1500);
+  };
+  const save = async (restart: boolean) => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      await api.setAppPort(port);
+      if (!restart) {
+        setMsg({ ok: true, text: `Saved. Feedback Alley will use port ${port} the next time it starts.` });
+        await load();
+        return;
+      }
+      await api.restartApp();
+      setMsg({ ok: true, text: `Restarting on port ${port}…` });
+      // a browser on another computer follows to the new address
+      setTimeout(() => (location.href = `${location.protocol}//${location.hostname}:${port}/`), 4000);
+    } catch (e) {
+      setMsg({ ok: false, text: (e as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <p className="muted small">Open the editor, or any display, from another computer or device on the same network at:</p>
+      <div className="addr-list">
+        {info.urls.map((u, i) => (
+          <div key={u} className="addr-row">
+            <code>{u}</code>
+            {i === 0 && <span className="muted small">this computer only</span>}
+            <button className="small" onClick={() => copy(u)}>{copied === u ? 'Copied' : 'Copy'}</button>
+          </div>
+        ))}
+        {info.urls.length === 1 && <p className="muted small">No network connection found, so only this computer can reach it.</p>}
+      </div>
+      <Row label="Port" hint={editable ? 'Default 8090. Takes effect when Feedback Alley restarts.' : undefined}>
+        {editable ? (
+          <span className="btn-row">
+            <NumberField value={port} onChange={(v) => { setPort(Math.round(v)); setMsg(null); }} />
+            <button disabled={busy || port === info.savedPort} onClick={() => save(false)}>Save</button>
+            <button className="primary" disabled={busy || (port === info.port && !pending)} onClick={() => save(true)}>Save &amp; restart</button>
+          </span>
+        ) : (
+          <span className="addr-port">{info.port}</span>
+        )}
+      </Row>
+      {pending && !msg && (
+        <p className="muted small">
+          Set to {info.savedPort}, but running on {info.port}: either port {info.savedPort} was busy when Feedback Alley started, or it
+          was changed and Feedback Alley hasn’t restarted yet.
+        </p>
+      )}
+      {msg && <p className={`small ${msg.ok ? 'ok-text' : 'error-text'}`}>{msg.text}</p>}
+      {info.envPort != null && <p className="muted small">This port was set when Feedback Alley was started (PORT={info.envPort}), so it can’t be changed here.</p>}
+      {!info.configurable && <p className="muted small">Running from the command line or in development: set the port with the <code>PORT</code> environment variable.</p>}
+      {editable && (
+        <p className="muted small">
+          Changing the port changes every address above, so update bookmarks and displays that use them. Screens with their own
+          output port keep it.
+        </p>
+      )}
+    </>
   );
 }

@@ -25,9 +25,9 @@ The app isn't code-signed yet, so the first launch shows a warning:
 - **Windows:** on the SmartScreen prompt click **More info → Run anyway**.
 
 Opening the app starts the editor in a window, and the server that displays connect to.
-- **Displays** open in any browser, on this machine or others on the network. **File → Copy Network Address** gives the address to use. Every screen can also have its own port (see below).
+- **Displays** open in any browser, on this machine or others on the network. **⚙ Settings → Editor address** (or **File → Copy Network Address**) gives the address to use. Every screen can also have its own port (see below).
 - **Closing:** on macOS, closing the window keeps Feedback Alley running for your displays; quit it with ⌘Q. On Windows and Linux, closing the window quits the app.
-- **Port:** the app uses port 8090, or the next free one if 8090 is taken (it warns when that happens). To pick another port, put `{"port": 9000}` in `app-settings.json` next to the data folder.
+- **Port:** the app uses port 8090, or the next free one if 8090 is taken (it warns when that happens). **⚙ Settings → Editor address** lists the addresses to use and lets you pick another port (**Save & restart**). It's stored in `app-settings.json` next to the data folder.
 - **Your project** is saved in the app's data folder (**File → Show Data Folder**):
   `~/Library/Application Support/Feedback Alley/data` on macOS, `%APPDATA%\Feedback Alley\data` on Windows.
   Use **⚙ Settings → Export / Import** to move a project between machines.

@@ -658,7 +658,23 @@
   The address stays the same even if you rename the screen. To show a different screen on that display, move the port to another
   screen; open displays switch over automatically.
 </p>
-<div class="tip"><p>To find the address, choose <b>File → Copy Network Address</b> in Feedback Alley. If it lists more than one, use the one on the same network as your displays.</p></div>
+<div class="tip"><p>To find the address, open <b>⚙ Settings → Editor address</b>, or choose <b>File → Copy Network Address</b>. If it lists more than one, use the one on the same network as your displays.</p></div>
+<h3 id="address">The editor’s address and port</h3>
+<p>
+  Feedback Alley’s editor, and every display link, is reached at this computer’s address on port <b>8090</b>, for example
+  <code>http://192.168.1.20:8090/</code>. Other computers on the network can open the editor there too. <b>⚙ Settings → Editor address</b>
+  lists every address, each with a <b>Copy</b> button. The <code>localhost</code> one works only on this computer.
+</p>
+<figure>
+  <img style="max-width: 560px" src="img/editor-address.png" alt="The Editor address section in Settings, listing the localhost and network addresses with Copy buttons, and the port with Save and Save and restart buttons">
+  <figcaption>Settings → Editor address.</figcaption>
+</figure>
+<p>
+  To use another port, enter it under <b>Port</b> and click <b>Save &amp; restart</b>. Feedback Alley restarts on the new port, and its
+  window, and a browser that made the change, follow to the new address. <b>Save</b> keeps the change for the next time it starts.
+  Use a port from 1024 to 65535 that no other program, and no screen’s own output port, is using.
+</p>
+<div class="note"><p>Changing the port changes every address that uses it, so update bookmarks and any displays opened with the old one. Screens with their own output port keep it.</p></div>
 <h3>Other ways to open a display</h3>
 <ul>
   <li><b>Open display ↗</b> in the top bar opens the current screen in your browser.</li>
@@ -753,7 +769,7 @@
 
 <h4>A display can’t connect</h4>
 <ul>
-  <li>Use the computer’s network address (<b>File → Copy Network Address</b>), not <code>localhost</code>, on other devices.</li>
+  <li>Use the computer’s network address (<b>⚙ Settings → Editor address</b>), not <code>localhost</code>, on other devices.</li>
   <li>Make sure Feedback Alley is running, and that the display is on the same network.</li>
   <li>On Windows, allow Feedback Alley through Windows Defender Firewall for private networks.</li>
   <li>If a screen’s own port shows a warning such as “Port is already in use”, choose a different port number.</li>
@@ -762,7 +778,7 @@
 <h4>Feedback Alley says port 8090 is in use</h4>
 <p>
   Another program is using it, so Feedback Alley picked the next free port and told you which. Use the new address on your displays,
-  or close the other program and restart Feedback Alley.
+  close the other program and restart Feedback Alley, or choose a port of your own in <a href="#address">⚙ Settings → Editor address</a>.
 </p>
 
 <h4>macOS says the app “is damaged” or won’t open</h4>
