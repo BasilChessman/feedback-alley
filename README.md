@@ -9,7 +9,7 @@ The full [user guide](public/guide/index.html) is built into the app (the **?** 
 
 ## Install
 
-Download the installer for your computer from the project's **Releases** page:
+**[Download the latest release](https://github.com/BasilChessman/feedback-alley/releases/latest)**, picking the installer for your computer:
 
 | | |
 |---|---|
