@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { BarLayer, Block, FlashSpec, GroupLayer, ImageLayer, Layer, Screen, Settings, ShapeLayer, TextLayer, TextStyle, Values } from '../types';
 import { applyRules } from '../lib/rules';
-import { flashAnim, flashSpec, flashTextCls, flashVars } from '../lib/flash';
+import { flashAnim, flashSpec, flashSvg, flashTextCls, flashVars } from '../lib/flash';
+import { shapePoints } from '../lib/shapes';
 import { screenPx } from '../lib/pixels';
 import { headerRects, supportsHeader } from '../lib/header';
 import { readBar, thresholdColor } from '../lib/bar';
@@ -268,15 +269,45 @@ function GroupLayerView({ layer, o, f, cls }: LayerProps<GroupLayer>) {
 
 function ShapeLayerView({ layer, o, f, style, cls }: LayerProps<ShapeLayer>) {
   const { values, scale, settings } = useRender();
+  const clipId = useId();
   const t = settings.transitionMs;
+  const fill = color(o.fill ?? layer.fill, values);
+  const stroke = color(o.borderColor ?? layer.borderColor, values);
+  const points = shapePoints(layer);
+  if (points) {
+    // Stretched to the layer; the border is drawn at twice its width and
+    // clipped to the shape, so it sits inside the edge like a CSS border.
+    return (
+      <svg className={cls} style={style} viewBox="0 0 100 100" preserveAspectRatio="none">
+        <polygon
+          points={points}
+          style={{ fill, transition: t ? `fill ${t}ms` : undefined, ...flashSvg(f, 'fill') }}
+        />
+        {layer.borderWidth > 0 && (
+          <>
+            <clipPath id={clipId}><polygon points={points} /></clipPath>
+            <polygon
+              points={points}
+              clipPath={`url(#${CSS.escape(clipId)})`}
+              vectorEffect="non-scaling-stroke"
+              style={{
+                fill: 'none', stroke, strokeWidth: layer.borderWidth * scale * 2, strokeLinejoin: 'miter',
+                transition: t ? `stroke ${t}ms` : undefined, ...flashSvg(f, 'border'),
+              }}
+            />
+          </>
+        )}
+      </svg>
+    );
+  }
   return (
     <div
       className={cls}
       style={{
         ...style,
-        background: color(o.fill ?? layer.fill, values),
-        borderRadius: layer.radius * scale,
-        border: layer.borderWidth > 0 ? `${layer.borderWidth * scale}px solid ${color(o.borderColor ?? layer.borderColor, values)}` : undefined,
+        background: fill,
+        borderRadius: layer.kind === 'ellipse' ? '50%' : layer.radius * scale,
+        border: layer.borderWidth > 0 ? `${layer.borderWidth * scale}px solid ${stroke}` : undefined,
         transition: t ? `background-color ${t}ms, border-color ${t}ms` : undefined,
         ...flashAnim(f, ['fill', 'border']),
       }}
@@ -332,28 +363,56 @@ function BarLayerView({ layer, o, f, style, cls }: LayerProps<BarLayer>) {
 
 // Time variables usually change once a second (or once per poll). Between
 // updates, keep the time moving at real speed so the bar glides instead of
-// stepping, but never more than one update interval ahead. Only glide once
-// the time has been seen running in the expected direction, so a cued or
-// paused clip shows its real value, and if updates stop for a while (paused
-// mid-clip), settle back to the last real value.
+// stepping, but never more than one update interval ahead.
+// - Updates arrive with uneven delays (app -> Companion -> poll), so each one
+//   is a little early or late. Rather than jump to it, ease the difference
+//   out over a moment, and never move the bar backwards while it's running.
+//   A big difference (a seek, a new clip) still jumps.
+// - Only glide once the time has been seen running in the expected direction,
+//   so a cued or paused clip shows its real value. If updates stop for a while
+//   (paused mid-clip), settle back to the last real value.
+const EASE_S = 0.5; // how long a small timing error takes to fade (time constant)
+
+interface SmoothState {
+  time: number; // last value received
+  at: number; // when it arrived (performance.now)
+  running: boolean;
+  offset: number; // shown minus real when it arrived, eased out to 0
+  shown: number; // last time shown, so a running bar never steps back
+}
+
+function smoothAt(s: SmoothState, now: number, dir: 1 | -1, cap: number): number {
+  const idle = (now - s.at) / 1000;
+  if (!s.running || idle >= cap * 2) return s.time;
+  return s.time + dir * Math.min(idle, cap) + s.offset * Math.exp(-idle / EASE_S);
+}
+
 function useSmoothTime(time: number | undefined, dir: 1 | -1, refreshMs: number) {
-  const last = useRef({ time: NaN, at: 0, running: false });
+  const st = useRef<SmoothState>({ time: NaN, at: 0, running: false, offset: 0, shown: NaN });
   const [, tick] = useState(0);
   const now = performance.now();
-  if (time !== undefined && time !== last.current.time) {
-    const prev = last.current.time;
-    last.current = { time, at: now, running: !isNaN(prev) && (time - prev) * dir > 0 };
-  }
   const cap = Math.max(1, refreshMs / 1000);
-  const idle = (now - last.current.at) / 1000;
-  const ahead = last.current.running && idle < cap * 2 ? Math.min(idle, cap) : 0;
+  const s = st.current;
+  if (time !== undefined && time !== s.time) {
+    const prev = s.time;
+    const wasShowing = s.running && (now - s.at) / 1000 < cap * 2;
+    const before = wasShowing ? smoothAt(s, now, dir, cap) : NaN;
+    const running = !isNaN(prev) && (time - prev) * dir > 0;
+    const offset = running && Math.abs(before - time) < cap ? before - time : 0;
+    st.current = { time, at: now, running, offset, shown: offset ? s.shown : NaN };
+  }
+  const cur = st.current;
+  let shown = smoothAt(cur, now, dir, cap);
+  const gliding = cur.running && (now - cur.at) / 1000 < cap * 2;
+  if (gliding && !isNaN(cur.shown)) shown = dir < 0 ? Math.min(shown, cur.shown) : Math.max(shown, cur.shown);
+  cur.shown = gliding ? shown : NaN;
 
   useEffect(() => {
-    if (time === undefined || isNaN(time) || !last.current.running) return;
+    if (time === undefined || isNaN(time) || !st.current.running) return;
     let raf = 0;
     const loop = () => {
       tick((n) => n + 1);
-      if ((performance.now() - last.current.at) / 1000 < cap) raf = requestAnimationFrame(loop);
+      if ((performance.now() - st.current.at) / 1000 < cap) raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     // no update for a while: re-render so the bar settles on the real value
@@ -364,5 +423,5 @@ function useSmoothTime(time: number | undefined, dir: 1 | -1, refreshMs: number)
     };
   }, [time, cap]);
 
-  return time === undefined || isNaN(time) ? time : time + dir * ahead;
+  return time === undefined || isNaN(time) ? time : shown;
 }
