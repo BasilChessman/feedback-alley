@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { GO_BACK, GO_HOME } from '../types';
-import type { Anchor, BarLayer, Block, FlashPart, GroupLayer, ImageLayer, Layer, LayerHeader, Rect, Screen, ShapeLayer, TextLayer, TextStyle } from '../types';
+import type { Anchor, BarLayer, Block, FlashPart, GroupLayer, ImageLayer, Layer, LayerHeader, Rect, Screen, ShapeKind, ShapeLayer, TextLayer, TextStyle } from '../types';
 import { ASPECT_PRESETS, RESOLUTIONS } from '../lib/defaults';
+import { POINTED, SHAPE_KINDS, shapePoints } from '../lib/shapes';
 import { containerAt, containerRect, countLayers, groupAt } from '../lib/tree';
 import { rectPx, scaleStrokes, screenPx } from '../lib/pixels';
 import { selectBlocks, selectLayers, useEditor } from './EditorCtx';
@@ -846,10 +847,43 @@ function ShapeProps({ layer, set }: { layer: ShapeLayer; set: Setter }) {
   const s = (fn: (l: ShapeLayer) => void) => set<ShapeLayer>(fn);
   return (
     <Section title="Shape">
+      <Row label="Shape">
+        <span className="shape-picker">
+          {SHAPE_KINDS.map((k) => (
+            <button
+              key={k.value}
+              className={(layer.kind ?? 'rect') === k.value ? 'on' : ''}
+              title={k.label}
+              aria-label={k.label}
+              onClick={() => s((l) => (l.kind = k.value))}
+            >
+              <ShapeIcon kind={k.value} />
+            </button>
+          ))}
+        </span>
+      </Row>
+      {POINTED[layer.kind ?? 'rect'] && (
+        <Row label="Points">
+          <Segmented
+            value={layer.pointing ?? POINTED[layer.kind ?? 'rect']!}
+            onChange={(v) => s((l) => (l.pointing = v))}
+            options={[{ value: 'right', label: '→' }, { value: 'left', label: '←' }, { value: 'up', label: '↑' }, { value: 'down', label: '↓' }]}
+          />
+        </Row>
+      )}
       <Row label="Fill"><ColorField value={layer.fill} onChange={(v) => s((l) => (l.fill = v))} /></Row>
       <Row label="Border"><NumberField value={layer.borderWidth} min={0} step={0.5} suffix="px" onChange={(v) => s((l) => (l.borderWidth = v))} /></Row>
       {layer.borderWidth > 0 && <Row label="Border color"><ColorField value={layer.borderColor} onChange={(v) => s((l) => (l.borderColor = v))} /></Row>}
     </Section>
+  );
+}
+
+function ShapeIcon({ kind }: { kind: ShapeKind }) {
+  const points = shapePoints({ kind } as ShapeLayer);
+  return (
+    <svg viewBox="-8 -8 116 116" width="16" height="16" aria-hidden>
+      {kind === 'ellipse' ? <circle cx="50" cy="50" r="50" /> : points ? <polygon points={points} /> : <rect width="100" height="70" y="15" />}
+    </svg>
   );
 }
 
