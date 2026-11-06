@@ -127,8 +127,12 @@ export interface LayerHeader extends TextStyle {
   fill: string;
 }
 
+export type ShapeKind = 'rect' | 'ellipse' | 'triangle' | 'diamond' | 'pentagon' | 'hexagon' | 'octagon' | 'star' | 'arrow';
+
 export interface ShapeLayer extends LayerBase {
   type: 'shape';
+  kind?: ShapeKind; // missing = 'rect' (older projects)
+  pointing?: 'up' | 'right' | 'down' | 'left'; // triangle and arrow; missing = 'up' / 'right'
   fill: string;
   borderWidth: number; // reference px
   borderColor: string;

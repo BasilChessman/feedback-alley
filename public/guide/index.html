@@ -339,7 +339,7 @@
 <table>
   <tr><th>Layer</th><th>Use it for</th></tr>
   <tr><td>Text</td><td>Labels and live values. Mix plain text, variables and formatting. See <a href="#text">Text and formatting</a>.</td></tr>
-  <tr><td>Shape</td><td>A colored rectangle or rounded box, with an optional border. Good for backgrounds, dividers and status lights.</td></tr>
+  <tr><td>Shape</td><td>A colored shape with an optional border: rectangle (or rounded box), circle / ellipse, triangle, diamond, pentagon, hexagon, octagon, star or arrow. Triangles and arrows can point up, down, left or right. Shapes stretch to fill the layer, so a circle needs a square layer. Good for backgrounds, dividers, status lights and cues.</td></tr>
   <tr><td>Image</td><td>A logo or picture. Click <b>Upload…</b> to add one, or enter a web address or a variable. <b>Fit</b> chooses whether the image fits inside, fills, or stretches to the layer.</td></tr>
   <tr><td>Bar</td><td>Meters, progress bars and countdowns. See <a href="#bars">Bars, meters and countdowns</a>.</td></tr>
   <tr><td>Group</td><td>Several layers that move and resize together. See <a href="#groups">Groups</a>.</td></tr>
@@ -470,7 +470,7 @@
 <ul>
   <li>Times can be written as seconds (<code>140</code>), <code>2:20</code>, <code>1:02:20</code> or <code>01:02:20:12</code> (frames are ignored).</li>
   <li>If a variable gives a plain number, set <b>Plain numbers</b> to Seconds or Milliseconds to match.</li>
-  <li><b>Smooth</b> keeps the bar gliding between Companion’s once-a-second updates. If the video pauses, the bar stops within a second.</li>
+  <li><b>Smooth</b> keeps the bar gliding between Companion’s updates and evens out small timing hiccups so it moves at a steady speed. A cued or paused video shows its real position; if a video pauses mid-play, the bar stops within a second and settles on the real time.</li>
   <li><b>Reverse</b> starts the bar full and empties it instead.</li>
   <li><b>Direction</b> fills left-to-right, right-to-left, bottom-to-top or top-to-bottom.</li>
 </ul>

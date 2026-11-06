@@ -497,3 +497,10 @@ input.bad { border-color: #e5484d; }
 .addr-port { padding-top: 5px; font-variant-numeric: tabular-nums; }
 .ok-text { color: var(--ok); }
 .error-text { color: var(--danger); }
+/* flashing for shapes drawn as SVG */
+@keyframes flash-svg-fill { 50% { fill: var(--flash-color); } }
+@keyframes flash-svg-stroke { 50% { stroke: var(--flash-color); } }
+.shape-picker { display: flex; flex-wrap: wrap; gap: 4px; }
+.shape-picker button { padding: 4px 6px; line-height: 0; }
+.shape-picker button svg { fill: currentColor; }
+.shape-picker button.on { background: var(--accent-2); border-color: var(--accent-2); color: white; }

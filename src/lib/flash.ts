@@ -53,3 +53,10 @@ export function flashVars(f: FlashSpec | null): CSSProperties | undefined {
 
 // Text flashes through a class, so text with its own inline colors flashes too.
 export const flashTextCls = (f: FlashSpec | null) => (f?.parts.includes('text') ? ' flash-text' : '');
+
+// Flash for one part of a shape drawn as SVG, which colors with fill/stroke
+// rather than background/border.
+export function flashSvg(f: FlashSpec | null, part: 'fill' | 'border'): CSSProperties | undefined {
+  if (!f?.parts.includes(part)) return undefined;
+  return { animation: `${part === 'fill' ? 'flash-svg-fill' : 'flash-svg-stroke'} ${f.speed}s steps(1, end) infinite` };
+}
