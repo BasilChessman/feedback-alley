@@ -332,25 +332,36 @@ function BarLayerView({ layer, o, f, style, cls }: LayerProps<BarLayer>) {
 
 // Time variables usually change once a second (or once per poll). Between
 // updates, keep the time moving at real speed so the bar glides instead of
-// stepping, but never more than one update interval ahead, so a paused
-// video only drifts that far before the bar stops.
+// stepping, but never more than one update interval ahead. Only glide once
+// the time has been seen running in the expected direction, so a cued or
+// paused clip shows its real value, and if updates stop for a while (paused
+// mid-clip), settle back to the last real value.
 function useSmoothTime(time: number | undefined, dir: 1 | -1, refreshMs: number) {
-  const last = useRef({ time: NaN, at: 0 });
+  const last = useRef({ time: NaN, at: 0, running: false });
   const [, tick] = useState(0);
   const now = performance.now();
-  if (time !== undefined && time !== last.current.time) last.current = { time, at: now };
+  if (time !== undefined && time !== last.current.time) {
+    const prev = last.current.time;
+    last.current = { time, at: now, running: !isNaN(prev) && (time - prev) * dir > 0 };
+  }
   const cap = Math.max(1, refreshMs / 1000);
-  const ahead = Math.min((now - last.current.at) / 1000, cap);
+  const idle = (now - last.current.at) / 1000;
+  const ahead = last.current.running && idle < cap * 2 ? Math.min(idle, cap) : 0;
 
   useEffect(() => {
-    if (time === undefined || isNaN(time)) return;
+    if (time === undefined || isNaN(time) || !last.current.running) return;
     let raf = 0;
     const loop = () => {
       tick((n) => n + 1);
       if ((performance.now() - last.current.at) / 1000 < cap) raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    // no update for a while: re-render so the bar settles on the real value
+    const settle = setTimeout(() => tick((n) => n + 1), cap * 2000 + 50);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(settle);
+    };
   }, [time, cap]);
 
   return time === undefined || isNaN(time) ? time : time + dir * ahead;
