@@ -5,7 +5,8 @@ import { flashAnim, flashSpec, flashSvg, flashTextCls, flashVars } from '../lib/
 import { shapePoints } from '../lib/shapes';
 import { screenPx } from '../lib/pixels';
 import { headerRects, supportsHeader } from '../lib/header';
-import { readBar, thresholdColor } from '../lib/bar';
+import { barMarkers, readBar, thresholdColor, zoneColor, type BarReading } from '../lib/bar';
+import { METER_DEFAULTS } from '../lib/defaults';
 import { renderMarkdown, resolveText, toCssColor } from '../lib/variables';
 
 
@@ -347,6 +348,9 @@ function BarLayerView({ layer, o, f, style, cls }: LayerProps<BarLayer>) {
   const t = settings.transitionMs;
   // smooth bars move every frame, so only the color fades
   const anim = t && !smooth ? `${Math.min(t * 2, 400)}ms linear` : undefined;
+  if (layer.look === 'meter' || layer.markers?.trim()) {
+    return <MeterView layer={layer} reading={reading} frac={frac} o={o} f={f} style={style} cls={cls} anim={anim} />;
+  }
   const fill = o.fill ?? thresholdColor(layer, reading) ?? layer.fill;
   return (
     <div className={cls} style={{ ...style, background: color(layer.track, values), borderRadius: layer.radius * scale, overflow: 'hidden' }}>
@@ -360,6 +364,116 @@ function BarLayerView({ layer, o, f, style, cls }: LayerProps<BarLayer>) {
     </div>
   );
 }
+
+// % of the layer given to the scale: below a horizontal bar, left of a vertical one
+const MARKER_STRIP = { horizontal: 32, vertical: 45 };
+
+// A bar with a scale beside it (markers), drawn either solid or as an audio
+// meter of lit segments. The scale sits below a horizontal bar and to the left
+// of a vertical one.
+function MeterView({ layer, reading, frac, o, f, style, cls, anim }: {
+  layer: BarLayer; reading: BarReading; frac: number; o: ReturnType<typeof applyRules>; f: FlashSpec | null;
+  style: CSSProperties; cls: string; anim?: string;
+}) {
+  const { values, scale, settings } = useRender();
+  const t = settings.transitionMs;
+  const vertical = layer.direction === 'up' || layer.direction === 'down';
+  const markers = barMarkers(layer, reading.duration);
+  const strip = markers.length ? MARKER_STRIP[vertical ? 'vertical' : 'horizontal'] : 0;
+  // where the bar itself goes, leaving room for the scale
+  const barRect = vertical ? { x: strip, y: 0, w: 100 - strip, h: 100 } : { x: 0, y: 0, w: 100, h: 100 - strip };
+  // 0..1 along the bar (before reversing) -> 0..1 from the left / top edge
+  const edge = (p: number) => {
+    const q = layer.reverse ? 1 - p : p;
+    return layer.direction === 'right' || layer.direction === 'down' ? q : 1 - q;
+  };
+  const along = (c: number, size: number): CSSProperties =>
+    vertical ? { left: 0, right: 0, top: `${c * 100}%`, height: `${size * 100}%` } : { top: 0, bottom: 0, left: `${c * 100}%`, width: `${size * 100}%` };
+  const radius = layer.radius * scale;
+
+  let bar: ReactNode;
+  if (layer.look === 'meter') {
+    const n = Math.max(1, Math.min(200, Math.round(layer.segments ?? METER_DEFAULTS.segments)));
+    const gap = Math.max(0, Math.min(90, layer.segmentGap ?? METER_DEFAULTS.segmentGap)) / 100;
+    const track = color(layer.track, values);
+    const lit = isNaN(reading.progress) ? 0 : frac;
+    bar = Array.from({ length: n }, (_, i) => {
+      // segment i covers [i/n, (i+1)/n] of the bar; it lights once the level gets into it
+      const on = lit > i / n + 1e-9;
+      const zone = o.fill ?? zoneColor(layer, i / n, reading.duration) ?? layer.fill;
+      const a = edge(i / n);
+      const b = edge((i + 1) / n);
+      const step = 1 / n;
+      return (
+        <div
+          key={i}
+          style={{
+            position: 'absolute', ...along(Math.min(a, b) + (step * gap) / 2, step * (1 - gap)),
+            background: on ? color(zone, values) : track, borderRadius: radius,
+            transition: t ? `background-color ${Math.min(t, 80)}ms` : undefined,
+          }}
+        />
+      );
+    });
+  } else {
+    const p = (layer.reverse ? 1 - frac : frac) * 100;
+    const fillPos: CSSProperties =
+      layer.direction === 'right' ? { left: 0, top: 0, bottom: 0, width: `${p}%` }
+      : layer.direction === 'left' ? { right: 0, top: 0, bottom: 0, width: `${p}%` }
+      : layer.direction === 'up' ? { left: 0, right: 0, bottom: 0, height: `${p}%` }
+      : { left: 0, right: 0, top: 0, height: `${p}%` };
+    const fill = o.fill ?? thresholdColor(layer, reading) ?? layer.fill;
+    bar = (
+      <div style={{ position: 'absolute', inset: 0, background: color(layer.track, values), borderRadius: radius, overflow: 'hidden' }}>
+        <div
+          style={{
+            position: 'absolute', ...fillPos, background: color(fill, values),
+            transition: [anim && `width ${anim}, height ${anim}`, t && `background-color ${t}ms`].filter(Boolean).join(', ') || undefined,
+          }}
+        />
+      </div>
+    );
+  }
+
+  const markerColor = color(layer.markerColor ?? METER_DEFAULTS.markerColor, values, '#fff');
+  // labels scale with the room the scale has, and stay inside it at the ends
+  const font = vertical ? `min(${strip * 0.3}cqw, 6cqh)` : `min(${strip * 0.5}cqh, 3cqw)`;
+  // labels center on their mark, except ones at the very ends, which stay inside
+  const shift = (c: number) => (c < 0.02 ? 0 : c > 0.98 ? 100 : 50);
+  return (
+    <div className={cls} style={{ ...style, containerType: 'size' }}>
+      <div style={{ position: 'absolute', ...pctRect(barRect), ...flashAnim(f, ['fill']) }}>{bar}</div>
+      {markers.length > 0 && (
+        <div style={{ position: 'absolute', ...pctRect(vertical ? { x: 0, y: 0, w: strip, h: 100 } : { x: 0, y: 100 - strip, w: 100, h: strip }), color: markerColor }}>
+          {markers.map((m, i) => {
+            const c = edge(m.at);
+            return (
+              <div key={i}>
+                <div
+                  style={vertical
+                    ? { position: 'absolute', right: 0, width: '22%', top: `${c * 100}%`, height: Math.max(1, scale * 2), transform: `translateY(-${c * 100}%)`, background: markerColor }
+                    : { position: 'absolute', top: 0, height: '25%', left: `${c * 100}%`, width: Math.max(1, scale * 2), transform: `translateX(-${c * 100}%)`, background: markerColor }}
+                />
+                <span
+                  className="bar-marker"
+                  style={vertical
+                    ? { right: '30%', top: `${c * 100}%`, transform: `translateY(-${shift(c)}%)`, fontSize: font }
+                    : { bottom: 0, left: `${c * 100}%`, transform: `translateX(-${shift(c)}%)`, fontSize: font }}
+                >
+                  {m.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const pctRect = (r: { x: number; y: number; w: number; h: number }): CSSProperties => ({
+  left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%`,
+});
 
 // Time variables usually change once a second (or once per poll). Between
 // updates, keep the time moving at real speed so the bar glides instead of

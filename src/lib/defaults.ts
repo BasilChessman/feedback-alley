@@ -1,5 +1,6 @@
+import { newHeader } from './header';
 import { DEFAULT_PX_WIDTH, scaleStrokes, screenPx } from './pixels';
-import type { Block, FeedbackRule, Layer, LayerType, Project, Screen, Template } from '../types';
+import type { BarLayer, Block, FeedbackRule, Layer, LayerType, Project, Screen, Template } from '../types';
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -51,6 +52,23 @@ export function newLayer(type: LayerType): Layer {
         direction: 'right', fill: '#2fbf71', track: '#ffffff22', thresholdMode: 'absolute', thresholds: [],
       };
   }
+}
+
+export const METER_DEFAULTS = { segments: 30, segmentGap: 25, markerColor: '#ffffffaa' };
+
+// An audio meter: a bar in dB from -40 to +10, green/yellow/red zones, a scale
+// down the side and the level variable shown in a strip at the top.
+export function newMeterLayer(): Layer {
+  const bar = newLayer('bar') as BarLayer;
+  const value = '-20';
+  return {
+    ...bar, name: 'Meter', x: 20, y: 4, w: 60, h: 92,
+    look: 'meter', ...METER_DEFAULTS, segments: 25, direction: 'up', value, min: -40, max: 10,
+    track: '#ffffff14',
+    thresholds: [{ at: '-18', color: '#ffd23f' }, { at: '-6', color: '#ff4d4d' }],
+    markers: '+10, +6, 0, -6, -10, -20, -40',
+    header: { ...newHeader(), text: value, fill: '', size: 12, weight: 600, padding: 8 },
+  };
 }
 
 export function newBlock(rect?: Partial<Block>): Block {

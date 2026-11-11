@@ -98,9 +98,9 @@ export function useActions() {
     },
 
     // Adds into the container being edited (block or group), or into the selected block.
-    addLayer(type: LayerType, blockId = sel.focus ?? sel.blocks[0], path = blockId === sel.focus ? sel.path : []) {
+    addLayer(type: LayerType, blockId = sel.focus ?? sel.blocks[0], path = blockId === sel.focus ? sel.path : [], make: () => Layer = () => newLayer(type)) {
       if (!blockId) return;
-      const l = newLayer(type);
+      const l = make();
       updateScreen((s) => {
         const b = s.blocks.find((b) => b.id === blockId)!;
         const c = containerAt(b, path);

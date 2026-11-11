@@ -504,3 +504,4 @@ input.bad { border-color: #e5484d; }
 .shape-picker button { padding: 4px 6px; line-height: 0; }
 .shape-picker button svg { fill: currentColor; }
 .shape-picker button.on { background: var(--accent-2); border-color: var(--accent-2); color: white; }
+.bar-marker { position: absolute; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; }

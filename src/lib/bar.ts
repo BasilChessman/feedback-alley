@@ -84,3 +84,25 @@ export function activeThreshold(layer: BarLayer, reading: BarReading): number {
 export function thresholdColor(layer: BarLayer, reading: BarReading): string | undefined {
   return layer.thresholds[activeThreshold(layer, reading)]?.color;
 }
+
+// Color of the zone a point on the bar (0..1) falls in: a meter's segments
+// keep the color of their own zone, however far the level goes.
+export function zoneColor(layer: BarLayer, point: number, duration?: number): string | undefined {
+  return thresholdColor(layer, { progress: point, duration });
+}
+
+export interface BarMarker {
+  label: string;
+  at: number; // 0..1 along the bar, before reversing
+}
+
+// Scale marks from the comma-separated list, in the same units as thresholds.
+// Ones that can't be read or fall off the bar are dropped.
+export function barMarkers(layer: BarLayer, duration?: number): BarMarker[] {
+  return (layer.markers ?? '')
+    .split(',')
+    .map((m) => m.trim())
+    .filter(Boolean)
+    .map((label) => ({ label, at: thresholdPoint(layer, label, duration) }))
+    .filter((m) => m.at >= -1e-9 && m.at <= 1 + 1e-9);
+}

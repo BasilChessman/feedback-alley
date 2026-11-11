@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { GO_BACK, GO_HOME } from '../types';
 import type { Anchor, BarLayer, Block, FlashPart, GroupLayer, ImageLayer, Layer, LayerHeader, Rect, Screen, ShapeKind, ShapeLayer, TextLayer, TextStyle } from '../types';
-import { ASPECT_PRESETS, RESOLUTIONS } from '../lib/defaults';
+import { ASPECT_PRESETS, newMeterLayer, RESOLUTIONS } from '../lib/defaults';
 import { POINTED, SHAPE_KINDS, shapePoints } from '../lib/shapes';
 import { containerAt, containerRect, countLayers, groupAt } from '../lib/tree';
 import { rectPx, scaleStrokes, screenPx } from '../lib/pixels';
@@ -492,6 +492,7 @@ function AddLayerButtons({ blockId, path }: { blockId: string; path: string[] })
       <button onClick={() => addLayer('shape', blockId, path)}>+ Shape</button>
       <button onClick={() => addLayer('image', blockId, path)}>+ Image</button>
       <button onClick={() => addLayer('bar', blockId, path)}>+ Bar</button>
+      <button onClick={() => addLayer('bar', blockId, path, newMeterLayer)} title="Audio meter: segments, a dB scale and the level shown on top">+ Meter</button>
       <button onClick={() => addLayer('group', blockId, path)} title="Empty group: a box that holds its own layers">+ Group</button>
     </span>
   );

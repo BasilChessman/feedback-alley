@@ -1,6 +1,8 @@
 import { useContext } from 'react';
 import type { BarLayer } from '../types';
 import { activeThreshold, formatTime, readBar } from '../lib/bar';
+import { METER_DEFAULTS } from '../lib/defaults';
+import { newHeader } from '../lib/header';
 import { ColorField, NumberField, Row, Section, Segmented, Select, TextField, Toggle, ValuesCtx } from './fields';
 
 type Set = (fn: (l: BarLayer) => void) => void;
@@ -11,20 +13,63 @@ const SOURCES: { value: BarLayer['source']; label: string }[] = [
   { value: 'elapsed', label: 'Time elapsed' },
 ];
 
+// A header that shows the bar's value follows it when the value changes.
+function setValue(l: BarLayer, v: string) {
+  if (l.header && l.header.text === l.value) l.header.text = v;
+  l.value = v;
+}
+
+const showsValue = (l: BarLayer) => !!l.header?.enabled && l.header.side === 'top' && l.header.text === l.value;
+
 export function BarProps({ layer, set }: { layer: BarLayer; set: Set }) {
   const values = useContext(ValuesCtx);
   const timed = layer.source !== 'value';
   const reading = readBar(layer, values);
+  const meter = layer.look === 'meter';
 
   return (
     <>
       <Section title="Bar / meter">
+        <Row label="Look" hint={meter ? 'Lit segments, each in the color of its threshold zone' : undefined}>
+          <Segmented
+            value={layer.look ?? 'solid'}
+            onChange={(v) => set((l) => {
+              l.look = v;
+              if (v === 'meter') {
+                l.segments ??= METER_DEFAULTS.segments;
+                l.segmentGap ??= METER_DEFAULTS.segmentGap;
+              }
+            })}
+            options={[{ value: 'solid', label: 'Solid' }, { value: 'meter', label: 'Audio meter' }]}
+          />
+        </Row>
+        {meter && (
+          <Row label="Segments">
+            <span className="pair">
+              <NumberField value={layer.segments ?? METER_DEFAULTS.segments} min={1} max={200} onChange={(v) => set((l) => (l.segments = v))} />
+              <span>gap</span>
+              <NumberField value={layer.segmentGap ?? METER_DEFAULTS.segmentGap} min={0} max={90} suffix="%" onChange={(v) => set((l) => (l.segmentGap = v))} />
+            </span>
+          </Row>
+        )}
+        <Row label="Value on top" hint="Shows the value variable in a header strip above the bar">
+          <Toggle
+            value={showsValue(layer)}
+            onChange={(on) => set((l) => {
+              if (on) {
+                l.header = { ...(l.header ?? { ...newHeader(), fill: '', size: 15 }), enabled: true, side: 'top', text: l.value };
+              } else if (l.header) {
+                l.header.enabled = false;
+              }
+            })}
+          />
+        </Row>
         <Row label="Shows" hint={timed ? `Fills from empty to full as the time ${layer.source === 'remaining' ? 'counts down to 0' : 'reaches the duration'}` : undefined}>
           <Select value={layer.source} onChange={(v) => set((l) => (l.source = v))} options={SOURCES} />
         </Row>
         {!timed ? (
           <>
-            <Row label="Value"><TextField value={layer.value} onChange={(v) => set((l) => (l.value = v))} placeholder="$(connection:variable)" /></Row>
+            <Row label="Value"><TextField value={layer.value} onChange={(v) => set((l) => setValue(l, v))} placeholder="$(connection:variable)" /></Row>
             <Row label="Range">
               <span className="pair">
                 <NumberField value={layer.min} onChange={(v) => set((l) => (l.min = v))} />
@@ -36,7 +81,7 @@ export function BarProps({ layer, set }: { layer: BarLayer; set: Set }) {
         ) : (
           <>
             <Row label={layer.source === 'remaining' ? 'Time left' : 'Time elapsed'}>
-              <TextField value={layer.value} onChange={(v) => set((l) => (l.value = v))} placeholder="$(connection:time_remaining)" />
+              <TextField value={layer.value} onChange={(v) => set((l) => setValue(l, v))} placeholder="$(connection:time_remaining)" />
             </Row>
             <Row label="Duration" hint="A variable, or typed like 2:20 or 1:02:20">
               <TextField value={layer.duration} onChange={(v) => set((l) => (l.duration = v))} placeholder="$(connection:duration) or 2:20" />
@@ -74,7 +119,25 @@ export function BarProps({ layer, set }: { layer: BarLayer; set: Set }) {
           <Toggle value={layer.reverse} onChange={(v) => set((l) => (l.reverse = v))} />
         </Row>
         <Row label="Fill"><ColorField value={layer.fill} onChange={(v) => set((l) => (l.fill = v))} /></Row>
-        <Row label="Track"><ColorField value={layer.track} onChange={(v) => set((l) => (l.track = v))} /></Row>
+        <Row label={meter ? 'Unlit' : 'Track'}><ColorField value={layer.track} onChange={(v) => set((l) => (l.track = v))} /></Row>
+      </Section>
+      <Section title="Markers" defaultOpen={!!layer.markers?.trim()}>
+        <Row
+          label="At"
+          hint={`Comma separated, in the same units as the thresholds (${layer.thresholdMode === 'percent' ? '% of bar' : timed ? 'time' : 'value'}). A scale is drawn ${layer.direction === 'up' || layer.direction === 'down' ? 'to the left of' : 'below'} the bar.`}
+        >
+          <TextField
+            value={layer.markers ?? ''}
+            preview={false}
+            placeholder={layer.thresholdMode === 'percent' ? '0, 25, 50, 75, 100' : timed ? '0:00, 1:00, 2:00' : `${layer.min}, ${layer.max}`}
+            onChange={(v) => set((l) => (l.markers = v))}
+          />
+        </Row>
+        {layer.markers?.trim() && (
+          <Row label="Color">
+            <ColorField value={layer.markerColor ?? METER_DEFAULTS.markerColor} onChange={(v) => set((l) => (l.markerColor = v))} />
+          </Row>
+        )}
       </Section>
       <ThresholdsSection layer={layer} set={set} activeIndex={activeThreshold(layer, reading)} />
     </>
@@ -117,7 +180,12 @@ function ThresholdsSection({ layer, set, activeIndex }: { layer: BarLayer; set: 
           ]}
         />
       </Row>
-      <p className="muted small">{help} The furthest point reached wins. Feedback rules that set the fill override thresholds.</p>
+      <p className="muted small">
+        {layer.look === 'meter'
+          ? 'Each segment from a point onward lights in its color, like the yellow and red zones of an audio meter.'
+          : <>{help} The furthest point reached wins.</>}
+        {' '}Feedback rules that set the fill override thresholds.
+      </p>
       {layer.thresholds.map((th, i) => (
         <div key={i} className={`threshold${i === activeIndex ? ' active' : ''}`}>
           <span className="rule-dot" title={i === activeIndex ? 'Active now' : 'Not active'} />

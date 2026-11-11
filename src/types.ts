@@ -167,6 +167,15 @@ export interface BarLayer extends LayerBase {
   // Fill color changes as the bar reaches each point; the furthest one reached wins.
   thresholdMode: 'absolute' | 'percent';
   thresholds: BarThreshold[];
+  // 'meter': an audio-style meter of lit segments, each colored by the
+  // threshold zone it sits in. Missing = 'solid' (older projects).
+  look?: 'solid' | 'meter';
+  segments?: number; // meter: how many segments
+  segmentGap?: number; // meter: gap between segments, % of each step
+  // Scale marks beside the bar, comma separated, in the same units as the
+  // thresholds (e.g. "-60, -40, -20, -6, 0"). Shown as typed.
+  markers?: string;
+  markerColor?: string;
 }
 
 // A layer that holds other layers: a "block within a block". Children are
