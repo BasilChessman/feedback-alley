@@ -340,7 +340,7 @@ function ImageLayerView({ layer, style, cls }: LayerProps<ImageLayer>) {
 /** The element's size in device pixels (Retina-sharp, at most 2×), settled: it only changes once resizing has
  *  paused, so a live picture isn't re-requested on every frame of a drag or a window resize. */
 function useDevicePixelSize(ref: React.RefObject<HTMLElement | null>, on: boolean) {
-  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const [size, setSize] = useState<{ w: number; h: number; scale: number } | null>(null);
   useEffect(() => {
     const el = ref.current;
     if (!on || !el) return;
@@ -350,7 +350,8 @@ function useDevicePixelSize(ref: React.RefObject<HTMLElement | null>, on: boolea
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       // Rounded to 4 px so sub-pixel jitter doesn't count as a new size.
       const w = Math.max(4, Math.round((r.width * dpr) / 4) * 4), h = Math.max(4, Math.round((r.height * dpr) / 4) * 4);
-      const apply = () => setSize((s) => (s && s.w === w && s.h === h ? s : { w, h }));
+      const scale = Math.round(dpr * 100) / 100;
+      const apply = () => setSize((s) => (s && s.w === w && s.h === h && s.scale === scale ? s : { w, h, scale }));
       clearTimeout(timer);
       if (first) apply(); else timer = setTimeout(apply, 400);
     };
@@ -362,12 +363,14 @@ function useDevicePixelSize(ref: React.RefObject<HTMLElement | null>, on: boolea
   return on ? size : null;
 }
 
-/** The address with w and h set (replacing any already there). */
-function withSize(src: string, { w, h }: { w: number; h: number }) {
+/** The address with w, h (device pixels) and scale (pixels per CSS pixel) set, replacing any already there. The
+ *  source lays the picture out at w / scale × h / scale, so it matches a window of the layer's on-screen size. */
+function withSize(src: string, { w, h, scale }: { w: number; h: number; scale: number }) {
   try {
     const u = new URL(src, window.location.href);
     u.searchParams.set('w', String(w));
     u.searchParams.set('h', String(h));
+    u.searchParams.set('scale', String(scale));
     return u.toString();
   } catch {
     return src;
