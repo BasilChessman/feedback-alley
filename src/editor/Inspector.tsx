@@ -894,6 +894,16 @@ function ImageProps({ layer, set }: { layer: ImageLayer; set: Setter }) {
     <Section title="Image">
       <Row label="Source"><ImageField value={layer.src} onChange={(v) => s((l) => (l.src = v))} /></Row>
       <Row label="Fit"><Segmented value={layer.fit} onChange={(v) => s((l) => (l.fit = v))} options={FIT_OPTIONS} /></Row>
+      <Row label="Size">
+        <Toggle value={!!layer.sizeToLayer} onChange={(v) => s((l) => (l.sizeToLayer = v || undefined))} label="Size the picture to this layer" />
+      </Row>
+      {layer.sizeToLayer && (
+        <p className="muted small">
+          Adds the layer's size to the address (w and h, in pixels) and asks again whenever it changes, for live
+          pictures that lay themselves out for any shape, like VizionCUE's countdown
+          (http://&lt;mac&gt;:7480/countdown.mjpg). Use Fit: Fill.
+        </p>
+      )}
     </Section>
   );
 }

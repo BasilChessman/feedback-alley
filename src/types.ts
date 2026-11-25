@@ -142,6 +142,9 @@ export interface ImageLayer extends LayerBase {
   type: 'image';
   src: string; // url, /uploads/..., may contain variables
   fit: 'contain' | 'cover' | 'fill';
+  /** Add the layer's on-screen size in device pixels to the address (?w=…&h=…), updated when it changes:
+   *  for live pictures that lay themselves out for any shape (e.g. VizionCUE's countdown). */
+  sizeToLayer?: boolean;
 }
 
 export interface BarThreshold {

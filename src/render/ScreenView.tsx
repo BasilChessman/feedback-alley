@@ -1,3 +1,4 @@
+import type React from 'react';
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { BarLayer, Block, FlashSpec, GroupLayer, ImageLayer, Layer, Screen, Settings, ShapeLayer, TextLayer, TextStyle, Values } from '../types';
 import { applyRules } from '../lib/rules';
@@ -318,10 +319,15 @@ function ShapeLayerView({ layer, o, f, style, cls }: LayerProps<ShapeLayer>) {
 
 function ImageLayerView({ layer, style, cls }: LayerProps<ImageLayer>) {
   const { values, scale, editing } = useRender();
-  const src = resolveText(layer.src, values).trim();
-  if (!src) return editing && !layer.bgColor && !layer.bgImage ? <div className={`${cls} image-empty`} style={style}>Image</div> : null;
+  const raw = resolveText(layer.src, values).trim();
+  const ref = useRef<HTMLImageElement>(null);
+  const size = useDevicePixelSize(ref, !!layer.sizeToLayer && !!raw);
+  if (!raw) return editing && !layer.bgColor && !layer.bgImage ? <div className={`${cls} image-empty`} style={style}>Image</div> : null;
+  // Sized pictures wait for the first measurement, so the source isn't asked for a wrong size first.
+  const src = layer.sizeToLayer ? (size ? withSize(raw, size) : undefined) : raw;
   return (
     <img
+      ref={ref}
       className={cls}
       src={src}
       alt=""
@@ -329,6 +335,43 @@ function ImageLayerView({ layer, style, cls }: LayerProps<ImageLayer>) {
       style={{ ...style, objectFit: layer.fit, borderRadius: layer.radius * scale }}
     />
   );
+}
+
+/** The element's size in device pixels (Retina-sharp, at most 2×), settled: it only changes once resizing has
+ *  paused, so a live picture isn't re-requested on every frame of a drag or a window resize. */
+function useDevicePixelSize(ref: React.RefObject<HTMLElement | null>, on: boolean) {
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!on || !el) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const measure = (first: boolean) => {
+      const r = el.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Rounded to 4 px so sub-pixel jitter doesn't count as a new size.
+      const w = Math.max(4, Math.round((r.width * dpr) / 4) * 4), h = Math.max(4, Math.round((r.height * dpr) / 4) * 4);
+      const apply = () => setSize((s) => (s && s.w === w && s.h === h ? s : { w, h }));
+      clearTimeout(timer);
+      if (first) apply(); else timer = setTimeout(apply, 400);
+    };
+    measure(true);
+    const ro = new ResizeObserver(() => measure(false));
+    ro.observe(el);
+    return () => { ro.disconnect(); clearTimeout(timer); };
+  }, [ref, on]);
+  return on ? size : null;
+}
+
+/** The address with w and h set (replacing any already there). */
+function withSize(src: string, { w, h }: { w: number; h: number }) {
+  try {
+    const u = new URL(src, window.location.href);
+    u.searchParams.set('w', String(w));
+    u.searchParams.set('h', String(h));
+    return u.toString();
+  } catch {
+    return src;
+  }
 }
 
 function BarLayerView({ layer, o, f, style, cls }: LayerProps<BarLayer>) {
