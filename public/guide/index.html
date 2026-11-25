@@ -350,6 +350,18 @@
   <li><b>Background &amp; corners</b>: a background color and/or image for just this layer, and rounded corners.</li>
   <li><b>Feedback rules</b>: change this layer when Companion values change.</li>
 </ul>
+<h3 id="live-picture">Show a live picture, like the VizionCUE countdown</h3>
+<p>VizionCUE sends its Countdown window as a live picture. Other apps that send a picture to a web address work the same way.</p>
+<ol>
+  <li>In VizionCUE, open the <b>Control</b> tab, find <b>Countdown Picture (Web)</b> and click <b>Copy</b> next to <i>Picture</i>.</li>
+  <li>In Feedback Alley, select the block and add an <b>Image</b> layer (<b>+ Image</b>). Turn on <b>Fill block</b> under <b>Position &amp; size</b> so it covers the whole block.</li>
+  <li>Paste the address into the Image layer’s <b>Source</b>, set <b>Fit</b> to <b>Fill</b> and turn on <b>Size the picture to this layer</b>. The countdown lays itself out for the block’s shape and follows it when you resize the block.</li>
+</ol>
+<h4>Make the background transparent</h4>
+<p>To let the block’s own background show behind the countdown, add <code>&amp;bg=transparent</code> to the end of the address, for example:</p>
+<p><code>http://192.168.1.126:7480/countdown.mjpg?w=1280&amp;h=720&amp;bg=transparent</code></p>
+<p>Then set the block’s <b>Fill</b> to any color you like. Feedback rules that change the block’s fill, or make it flash, show through the countdown too.</p>
+<div class="tip"><p>For a fixed color instead, add <code>&amp;bg=</code> and a color code without the <code>#</code>, such as <code>&amp;bg=1e3a8a</code> for dark blue. The code can also come from a variable: <code>&amp;bg=$(custom:countdown_bg)</code>. Without <code>bg</code>, the picture uses the background color chosen in VizionCUE’s Countdown window.</p></div>
 <h3>Relative or fixed size</h3>
 <p>Each layer’s <b>Sizing</b> setting, under <b>Position &amp; size</b>, decides what happens when you resize its block (or group):</p>
 <ul>

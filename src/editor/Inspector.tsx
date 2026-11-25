@@ -904,6 +904,10 @@ function ImageProps({ layer, set }: { layer: ImageLayer; set: Setter }) {
           (http://&lt;mac&gt;:7480/countdown.mjpg). Use Fit: Fill.
         </p>
       )}
+      <p className="muted small">
+        Tip: to let the block’s background show behind a VizionCUE countdown, add <code>&amp;bg=transparent</code> to
+        the end of its address. Or set a color with <code>&amp;bg=1e3a8a</code> (no #).
+      </p>
     </Section>
   );
 }
