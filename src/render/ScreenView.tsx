@@ -8,6 +8,7 @@ import { screenPx } from '../lib/pixels';
 import { headerRects, supportsHeader } from '../lib/header';
 import { barMarkers, readBar, thresholdColor, zoneColor, type BarReading } from '../lib/bar';
 import { METER_DEFAULTS } from '../lib/defaults';
+import { isMjpeg, playMjpeg } from '../lib/mjpeg';
 import { renderMarkdown, resolveText, toCssColor } from '../lib/variables';
 
 
@@ -320,14 +321,28 @@ function ShapeLayerView({ layer, o, f, style, cls }: LayerProps<ShapeLayer>) {
 function ImageLayerView({ layer, style, cls }: LayerProps<ImageLayer>) {
   const { values, scale, editing } = useRender();
   const raw = resolveText(layer.src, values).trim();
-  const ref = useRef<HTMLImageElement>(null);
-  const size = useDevicePixelSize(ref, !!layer.sizeToLayer && !!raw);
+  const ref = useRef<HTMLElement>(null);
+  const [, refresh] = useState(0);
+  const stream = isMjpeg(raw) && !plainImg.has(raw);
+  const size = useDevicePixelSize(ref, !!layer.sizeToLayer && !!raw, stream ? 'canvas' : 'img');
   if (!raw) return editing && !layer.bgColor && !layer.bgImage ? <div className={`${cls} image-empty`} style={style}>Image</div> : null;
   // Sized pictures wait for the first measurement, so the source isn't asked for a wrong size first.
   const src = layer.sizeToLayer ? (size ? withSize(raw, size) : undefined) : raw;
+  // Decided from the address itself (not the sized one), so the element stays the same while it's measured.
+  if (stream) {
+    return (
+      <MjpegCanvas
+        src={src}
+        canvasRef={ref as React.RefObject<HTMLCanvasElement | null>}
+        onUnsupported={() => { plainImg.add(raw); refresh((n) => n + 1); }}
+        className={cls}
+        style={{ ...style, objectFit: layer.fit, borderRadius: layer.radius * scale }}
+      />
+    );
+  }
   return (
     <img
-      ref={ref}
+      ref={ref as React.RefObject<HTMLImageElement | null>}
       className={cls}
       src={src}
       alt=""
@@ -337,9 +352,27 @@ function ImageLayerView({ layer, style, cls }: LayerProps<ImageLayer>) {
   );
 }
 
+/** Streams that couldn't be read directly (shown with a plain <img> instead). */
+const plainImg = new Set<string>();
+
+/** A live motion-JPEG picture drawn on a canvas (flat memory in every browser; see lib/mjpeg). */
+function MjpegCanvas({ src, canvasRef, onUnsupported, className, style }: {
+  src: string | undefined; canvasRef: React.RefObject<HTMLCanvasElement | null>; onUnsupported: () => void;
+  className: string; style: CSSProperties;
+}) {
+  const fallback = useRef(onUnsupported);
+  fallback.current = onUnsupported;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !src) return; // a sized picture waits for its first measurement
+    return playMjpeg(src, canvas, () => fallback.current());
+  }, [src, canvasRef]);
+  return <canvas ref={canvasRef} className={className} style={style} />;
+}
+
 /** The element's size in device pixels (Retina-sharp, at most 2×), settled: it only changes once resizing has
  *  paused, so a live picture isn't re-requested on every frame of a drag or a window resize. */
-function useDevicePixelSize(ref: React.RefObject<HTMLElement | null>, on: boolean) {
+function useDevicePixelSize(ref: React.RefObject<HTMLElement | null>, on: boolean, element: string) {
   const [size, setSize] = useState<{ w: number; h: number; scale: number } | null>(null);
   useEffect(() => {
     const el = ref.current;
@@ -359,7 +392,7 @@ function useDevicePixelSize(ref: React.RefObject<HTMLElement | null>, on: boolea
     const ro = new ResizeObserver(() => measure(false));
     ro.observe(el);
     return () => { ro.disconnect(); clearTimeout(timer); };
-  }, [ref, on]);
+  }, [ref, on, element]); // `element`: re-attach when the layer switches between <canvas> and <img>
   return on ? size : null;
 }
 
